@@ -1,6 +1,7 @@
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
-
+from selenium.webdriver.common.keys import Keys
+from pathlib import Path
 from detection import Detection
 from conf import USERNAME, PASSWORD
 from datetime import datetime
@@ -18,17 +19,19 @@ class Action:
 
     def __init__(self, webdriver):
         self.webdriver = webdriver
+        self.cwd = Path.cwd()
+        self.main_screenshot_png = str(self.cwd.joinpath('images/main_screen.png'))
 
     @staticmethod
     def get_time():
         # return current date and time
         return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
-    @staticmethod
-    def enter(n):
+    def enter(self, n):
         # press ENTER key N number of times
         for i in range(n):
-            send_keys("{ENTER}")
+            actions = ActionChains(self.webdriver).send_keys(Keys.RETURN)
+            actions.perform()
             time.sleep(0.8)
 
     def click(self, cord):
@@ -42,21 +45,31 @@ class Action:
         action.perform()
         time.sleep(0.4)
 
-    def screenshot_and_match(self, image, threshold=0.90):
+    def screenshot_and_match(self, image, threshold=0.74):
         # create screenshot and match(detect) image in entire window
         time.sleep(0.5)
-        self.webdriver.save_screenshot(r'images\main_screen.png')
-        return Detection(r'images\main_screen.png', fr'images\{image}.jpg', threshold)
+        self.webdriver.save_screenshot(self.main_screenshot_png)
+        return Detection(self.main_screenshot_png, image, threshold)
 
-    def do(self, current_image, custom_coordinates=None, previous_image=None, click=True, sleep_time=1.0):
-        det = self.screenshot_and_match(current_image)
+    def check_if_available(self, current_image, threshold=0.85):
+        current_image = str(self.cwd.joinpath("images/" + current_image + ".jpg"))
+        det = self.screenshot_and_match(current_image, threshold)
+        if det.check_if_available():
+            return True
+        else:
+            return False
+
+    def do(self, current_image, custom_coordinates=None, previous_image=None, click=True, sleep_time=1.0,
+           threshold=0.85):
+        current_image = str(self.cwd.joinpath("images/" + current_image + ".jpg"))
+        det = self.screenshot_and_match(current_image, threshold)
         while not det.check_if_available():
             time.sleep(sleep_time)
             if previous_image is not None:
                 det = self.screenshot_and_match(previous_image)
                 if det.check_if_available():
                     self.click(det.get_item_center())
-            det = self.screenshot_and_match(current_image)
+            det = self.screenshot_and_match(current_image, threshold)
         if click:
             if det.check_if_available():
                 if custom_coordinates is None:
@@ -65,19 +78,20 @@ class Action:
                     self.click(custom_coordinates)
 
     def login(self):
-        self.do(r'login\title_screen', sleep_time=3)
-        self.do(r'login\cookies_accept')
-        self.do(r'login\play_now', previous_image=r'login\cookies_accept')
-        self.do(r'login\before_first_login_button', (830, 680), previous_image=r'login\play_now')
-        self.do(r'login\login_credentials', click=False)
-        self.do(r'login\account_name', sleep_time=0.5)
+        self.do('login/title_screen', sleep_time=3, threshold=0.75)
+        self.do('login/cookies_accept')
+        self.do('login/play_now', previous_image='login/cookies_accept')
+        self.do('login/before_first_login_button', (830, 680), previous_image='login/play_now')
+        self.do('login/login_credentials', click=False)
+        self.do('login/account_name', sleep_time=0.5)
         ActionChains(self.webdriver).send_keys(USERNAME).perform()
-        self.do(r'login\password', sleep_time=0.5)
+        self.do('login/password', sleep_time=0.5)
         ActionChains(self.webdriver).send_keys(PASSWORD).perform()
-        self.do(r'login\stay_logged_in_false')
-        self.do(r'login\stay_logged_in_true', previous_image=r'login\stay_logged_in_false')
-        self.do(r'login\login_ready')
-        self.do(r'login\character_selection', custom_coordinates=(780, 380))
+        self.do('login/stay_logged_in_false')
+        self.do('login/stay_logged_in_true', previous_image='login/stay_logged_in_false')
+        self.do('login/login_ready')
+        self.do('login/character_selection', custom_coordinates=(780, 380))
+        return True
 
     def abawuwu(self):
         # open the Dr. Abawuwu tab
@@ -109,28 +123,15 @@ class Action:
 
     def arena(self):
         opponents = [(575, 300), (790, 300), (1000, 300)]
-        # check if arena is available
-        det = self.screenshot_and_match(r'arena\arena', 0.93)
-        # get main center coordinates
-        main_x, main_y = det.get_item_center()
-
-        # check if available
-        if det.check_if_available():
-            self.click(main_x, main_y)
+        if self.check_if_available('arena/arena', threshold=0.93):
+            self.do('arena/arena', threshold=0.93)
+            self.do('arena/arena_boxes', previous_image='arena/arena')
+            self.click(choice(opponents))
+            self.enter(3)
+            print(f'{self.get_time()}: A player has been attacked in the Arena.')
         else:
-            return print(f'{self.get_time()}: Arena is currently on cooldown.')
+            print(f'{self.get_time()}: Arena is currently on cooldown.')
 
-        # create a new screenshot to see if we opened the correct tab
-        det = self.screenshot_and_match(r'arena\arena_boxes')
-        while not det.check_if_available():
-            self.click(main_x, main_y)
-            det = self.screenshot_and_match(r'arena\arena_boxes')
-
-        # attack a random player
-        x, y = choice(opponents)
-        self.click(x, y)
-        self.enter(3)
-        print(f'{self.get_time()}: A player has been attacked in the Arena.')
 
     def pets(self):
         # check if pets are available

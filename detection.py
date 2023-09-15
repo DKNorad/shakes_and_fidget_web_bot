@@ -1,13 +1,15 @@
 import cv2 as cv
+from pathlib import Path
 
 
 class Detection:
-
     def __init__(self, screenshot, image, threshold=0.85):
+        self.cwd = Path.cwd()
         self.threshold = threshold
+        self.main_screenshot_jpg = str(self.cwd.joinpath('images/main_screen.jpg'))
         self.debug_image = image
-        cv.imwrite(r'images\main_screen.jpg', cv.imread(screenshot, cv.IMREAD_UNCHANGED), [int(cv.IMWRITE_JPEG_QUALITY), 100])
-        self.main_screen = cv.imread(r'images\main_screen.jpg', cv.IMREAD_UNCHANGED)
+        cv.imwrite(self.main_screenshot_jpg, cv.imread(screenshot, cv.IMREAD_UNCHANGED), [int(cv.IMWRITE_JPEG_QUALITY), 100])
+        self.main_screen = cv.imread(self.main_screenshot_jpg, cv.IMREAD_UNCHANGED)
         self.image_to_search = cv.imread(image, cv.IMREAD_UNCHANGED)
         self.image_found = cv.matchTemplate(self.main_screen, self.image_to_search, cv.TM_CCORR_NORMED)
 

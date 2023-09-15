@@ -20,4 +20,4 @@ while True:
         break
 
 while True:
-    pass
+    action.arena()
