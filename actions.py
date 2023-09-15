@@ -62,6 +62,8 @@ class Action:
     def do(self, current_image, custom_coordinates=None, previous_image=None, click=True, sleep_time=1.0,
            threshold=0.85):
         current_image = str(self.cwd.joinpath("images/" + current_image + ".jpg"))
+        if previous_image is not None:
+            previous_image = str(self.cwd.joinpath("images/" + previous_image + ".jpg"))
         det = self.screenshot_and_match(current_image, threshold)
         while not det.check_if_available():
             time.sleep(sleep_time)
@@ -123,8 +125,8 @@ class Action:
 
     def arena(self):
         opponents = [(575, 300), (790, 300), (1000, 300)]
-        if self.check_if_available('arena/arena', threshold=0.93):
-            self.do('arena/arena', threshold=0.93)
+        if self.check_if_available('arena/arena', threshold=0.89):
+            self.do('arena/arena', threshold=0.89)
             self.do('arena/arena_boxes', previous_image='arena/arena')
             self.click(choice(opponents))
             self.enter(3)
