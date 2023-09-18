@@ -36,23 +36,23 @@ class Action:
 
     def click(self, cord):
         """
-        Adding 85 to the y coordinate to compensate the firefox browser tabs and address bar at the top
-        left mouse click with 4ms sleep timer
+        left mouse click with half a second sleep time.
         """
         action = ActionBuilder(self.webdriver)
         print(f"x - {cord[0]}, y - {cord[1]}")
         action.pointer_action.move_to_location(cord[0], cord[1]).click()
         action.perform()
-        time.sleep(0.4)
+        time.sleep(0.5)
 
-    def screenshot_and_match(self, image, threshold=0.74):
-        # create screenshot and match(detect) image in entire window
+    def screenshot_and_match(self, image, threshold):
+        """ create screenshot and match(detect) image in entire window """
         time.sleep(0.5)
         self.webdriver.save_screenshot(self.main_screenshot_png)
         return Detection(self.main_screenshot_png, image, threshold)
 
     def check_if_available(self, current_image, threshold=0.85):
-        current_image = str(self.cwd.joinpath("images/" + current_image + ".jpg"))
+        """ Check if we have a match. Sometimes we want to check without doing anything. """
+        current_image = str(self.cwd.joinpath(f"images/{current_image}.jpg"))
         det = self.screenshot_and_match(current_image, threshold)
         if det.check_if_available():
             return True
@@ -61,14 +61,23 @@ class Action:
 
     def do(self, current_image, custom_coordinates=None, previous_image=None, click=True, sleep_time=1.0,
            threshold=0.85):
-        current_image = str(self.cwd.joinpath("images/" + current_image + ".jpg"))
+        """
+        The main function where we use image comparison to make sure we are on the correct screen and click if needed.
+        :param current_image: The image we will be checking on the screenshot.
+        :param custom_coordinates: If we need to click somewhere, different from the center of the current_image.
+        :param previous_image: If we don't match current_image, check the previous image/page again.
+        :param click: Perform a click on the coordinates. (Boolean)
+        :param sleep_time: Time between screenshots if we don't match the first time.
+        :param threshold: For image match.
+        """
+        current_image = str(self.cwd.joinpath(f"images/{current_image}.jpg"))
         if previous_image is not None:
-            previous_image = str(self.cwd.joinpath("images/" + previous_image + ".jpg"))
+            previous_image = str(self.cwd.joinpath(f"images/{previous_image}.jpg"))
         det = self.screenshot_and_match(current_image, threshold)
         while not det.check_if_available():
             time.sleep(sleep_time)
             if previous_image is not None:
-                det = self.screenshot_and_match(previous_image)
+                det = self.screenshot_and_match(previous_image, threshold)
                 if det.check_if_available():
                     self.click(det.get_item_center())
             det = self.screenshot_and_match(current_image, threshold)
@@ -80,11 +89,15 @@ class Action:
                     self.click(custom_coordinates)
 
     def login(self):
+        """
+        All actions required to completely log in to your account.
+        Make sure you fill the details in conf.py
+        """
         self.do('login/title_screen', sleep_time=3, threshold=0.75)
         self.do('login/cookies_accept')
-        self.do('login/play_now', previous_image='login/cookies_accept')
-        self.do('login/before_first_login_button', (830, 680), previous_image='login/play_now')
-        self.do('login/login_credentials', click=False)
+        self.do('login/play_now', previous_image='login/cookies_accept', sleep_time=3)
+        self.do('login/before_first_login_button', (830, 680), previous_image='login/play_now', sleep_time=3, threshold=0.90)
+        self.do('login/login_credentials', click=False, sleep_time=2, previous_image='login/before_first_login_button')
         self.do('login/account_name', sleep_time=0.5)
         ActionChains(self.webdriver).send_keys(USERNAME).perform()
         self.do('login/password', sleep_time=0.5)
@@ -93,8 +106,28 @@ class Action:
         self.do('login/stay_logged_in_true', previous_image='login/stay_logged_in_false')
         self.do('login/login_ready')
         self.do('login/character_selection', custom_coordinates=(780, 380))
+        time.sleep(2.5)
+        if self.check_if_available('login/guild_fight'):
+            ActionChains(self.webdriver).send_keys(Keys.ESCAPE).perform()
+
+        # Enable timers and other options.
+        while True:
+            self.do('login/settings')
+            if self.check_if_available('login/check_if_settings_screen'):
+                break
+            time.sleep(3)
+
+        self.do('login/show_timer_false')
+        while not self.check_if_available('login/show_timer_true'):
+            self.do('login/show_timer_false')
+
+        self.do('login/tube_false')
+        while not self.check_if_available('login/tube_true'):
+            self.do('login/tube_false')
+
         return True
 
+    #TODO
     def abawuwu(self):
         # open the Dr. Abawuwu tab
         main_x, main_y = 150, 660
@@ -124,56 +157,45 @@ class Action:
             return print(f'{self.get_time()}: The wheel has already been spun today.')
 
     def arena(self):
+        """
+        Taking care of the arena attacks.
+        TODO: Try to gather details about the opponents and simulate battles before attacking.
+        TODO: Ex, simulate 1000 battles per opponent and attack the one with the greatest chance to win against.
+        """
         opponents = [(575, 300), (790, 300), (1000, 300)]
-        if self.check_if_available('arena/arena', threshold=0.89):
-            self.do('arena/arena', threshold=0.89)
-            self.do('arena/arena_boxes', previous_image='arena/arena')
+        if self.check_if_available('arena/arena', threshold=0.93):
+            self.do('arena/arena', threshold=0.93)
+            self.do('arena/arena_boxes', previous_image='arena/arena', threshold=0.93)
             self.click(choice(opponents))
             self.enter(3)
             print(f'{self.get_time()}: A player has been attacked in the Arena.')
         else:
             print(f'{self.get_time()}: Arena is currently on cooldown.')
 
-
     def pets(self):
-        # check if pets are available
-        det = self.screenshot_and_match(r'pets\pets_cooldown', 0.94)
-        if det.check_if_available():
-            return print(f'{self.get_time()}: Pets are under cooldown at the moment.')
+        """
+        Check if pets are not under cooldown and attack all pets in order from "Shadow" to "Water".
+        """
+        if not self.check_if_available('pets/pets_cooldown', threshold=0.94):
+            while True:
+                self.do('pets/pets_cooldown', threshold=0.94)
+                if self.check_if_available('pets/check_if_pet_screen'):
+                    break
 
-        # set center coordinates and click
-        main_x, main_y = 150, 365
-        self.click(main_x, main_y)
+            if self.check_if_available('pets/pets_done', threshold=0.94):
+                print(f'{self.get_time()}: All pets have been attacked.')
+                return
 
-        # create a new screenshot to see if we opened the correct tab
-        det = self.screenshot_and_match(r'pets\check_if_pet_screen')
-        while not det.check_if_available():
-            self.click(main_x, main_y)
-            det = self.screenshot_and_match(r'pets\check_if_pet_screen')
-
-        det = self.screenshot_and_match(r'pets\pets_done', 0.97)
-        if det.check_if_available():
-            return print(f'{self.get_time()}: All pets have been attacked.')
-        else:
-            # iterate over all 5 pets
             pets = ['pet_shadow', 'pet_light', 'pet_earth', 'pet_fire', 'pet_water']
-            count = 0
             for pet in pets:
-                det = self.screenshot_and_match(r'pets\pets_cooldown', 0.94)
-                if det.check_if_available():
-                    return print(f'{self.get_time()}: Pets are under cooldown at the moment.')
-
-                det = Detection('images/main_screen.jpg', f'images/pets/{pet}.jpg', 0.95)
-                if not det.check_if_available():
-                    count += 1
-                    if count == 5:
-                        return print(f'{self.get_time()}: All pets have been attacked.')
+                if self.check_if_available(f'pets/{pet}.jpg', threshold=0.95):
+                    self.do(f'pets/{pet}.jpg', threshold=0.95)
+                    self.enter(3)
+                    print(f'{self.get_time()}: A pet has been attacked.')
+                else:
                     continue
-                x, y = det.get_item_center()
-                self.click(x, y)
-                self.enter(3)
-                print(f'{self.get_time()}: A pet has been attacked.')
-                break
+        else:
+            print(f'{self.get_time()}: Pets are under cooldown at the moment.')
 
     # TODO implement image to text processing to choose quest based on gold, exp or duration
     def tavern(self):
