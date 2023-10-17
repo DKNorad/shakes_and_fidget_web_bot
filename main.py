@@ -12,13 +12,13 @@ options.add_argument("--kiosk")
 driver = webdriver.Firefox(options)
 driver.set_window_size(1280, 720)
 driver.get(URL)
-try:
-    cookies = pickle.load(open("cookies.pkl", "rb"))
-    for cookie in cookies:
-        driver.add_cookie(cookie)
-except FileNotFoundError:
-    pass
-pickle.dump(driver.get_cookies(), open("cookies.pkl", "wb"))
+# try:
+#     cookies = pickle.load(open("cookies.pkl", "rb"))
+#     for cookie in cookies:
+#         driver.add_cookie(cookie)
+# except FileNotFoundError:
+#     pass
+# pickle.dump(driver.get_cookies(), open("cookies.pkl", "wb"))
 
 action = Action(driver)
 
@@ -29,4 +29,5 @@ while True:
 while True:
     action.arena()
     action.pets()
+    action.abawuwu()
     sleep(20)

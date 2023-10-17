@@ -12,6 +12,8 @@ import time
 class Action:
     def __init__(self, webdriver):
         self.webdriver = webdriver
+        self.actionBuilder = ActionBuilder(webdriver)
+        self.actionChain = ActionChains(webdriver)
         self.cwd = Path.cwd()
         self.main_screenshot_png = str(self.cwd.joinpath('images/main_screen.png'))
 
@@ -23,8 +25,8 @@ class Action:
     def enter(self, n):
         # press ENTER key N number of times
         for i in range(n):
-            actions = ActionChains(self.webdriver).send_keys(Keys.RETURN)
-            actions.perform()
+            self.actionChain.send_keys(Keys.RETURN)
+            self.actionChain.perform()
             time.sleep(0.8)
 
     def click(self, coord):
@@ -35,6 +37,8 @@ class Action:
         print(f"x - {coord[0]}, y - {coord[1]}")
         action.pointer_action.move_to_location(coord[0], coord[1]).click()
         action.perform()
+        self.actionBuilder.pointer_action.move_to_location(1, 1)
+        self.actionBuilder.perform()
         time.sleep(0.5)
 
     def screenshot_and_match(self, image, threshold):
@@ -98,24 +102,14 @@ class Action:
         self.do('login/stay_logged_in_false')
         self.do('login/stay_logged_in_true', previous_image='login/stay_logged_in_false')
         self.do('login/login_ready')
-        self.do('login/character_selection', custom_coordinates=(780, 380))
+        self.do('login/character_selection', custom_coordinates=(900, 380))
         time.sleep(2.5)
         print(f'{self.get_time()}: Login was successful.')
 
         # Enable timers and other options.
-        while True:
-            self.do('login/settings')
-            if self.check_if_available('login/check_if_settings_screen', threshold=0.9):
-                break
-            time.sleep(3)
-
-        self.do('login/show_timer_false')
-        while not self.check_if_available('login/show_timer_true'):
-            self.do('login/show_timer_false')
-
-        self.do('login/tube_off_false')
-        while not self.check_if_available('login/tube_off_true'):
-            self.do('login/tube_off_false')
+        self.do('login/check_if_settings_screen', previous_image='login/settings', click=False)
+        self.do('login/show_timer_true', previous_image='login/show_timer_false', click=False)
+        self.do('login/tube_off_true', previous_image='login/tube_off_false', click=False)
 
         print(f'{self.get_time()}: Settings changes were successful.')
         return True
@@ -134,7 +128,7 @@ class Action:
 
         # open the Dr. Abawuwu tab and spin the wheel
         self.do('abawuwu/abawuwu_check', previous_image='abawuwu/abawuwu', click=False)
-        if self.check_if_available('abawuwu/dr_spin_true', threshold=0.97):
+        if self.check_if_available('abawuwu/dr_spin_true', threshold=0.95):
             self.do('abawuwu/dr_spin_true')
             print(f'{self.get_time()}: Dr. Abawuwu wheel has been spun.')
         else:
@@ -162,7 +156,7 @@ class Action:
         """
         Check if pets are not under cooldown and attack all pets in order from "Shadow" to "Water".
         """
-        if not self.check_if_available('pets/pets_cooldown', threshold=0.89):
+        if not self.check_if_available('pets/pets_cooldown', threshold=0.91):
             while True:
                 self.do('pets/pets', threshold=0.94)
                 if self.check_if_available('pets/check_if_pet_screen'):
