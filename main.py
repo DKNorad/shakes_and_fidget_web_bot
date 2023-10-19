@@ -1,33 +1,34 @@
 from actions import Action
-import pickle
-from selenium import webdriver
+from selenium.webdriver import Firefox, FirefoxOptions
 from conf import URL
 from time import sleep
+from pathlib import Path
 
+try:
+    if not Path(Path.cwd().joinpath("ff_selenium_profile")).is_dir():
+        Path.cwd().joinpath("ff_selenium_profile").mkdir()
 
-options = webdriver.FirefoxOptions()
-# options.add_argument('--headless')
-options.add_argument("--kiosk")
+    options = FirefoxOptions()
+    # options.add_argument('--headless')
+    options.add_argument("--kiosk")
+    options.add_argument('-profile')
+    options.add_argument(Path.cwd().joinpath("ff_selenium_profile").as_posix())
+    driver = Firefox(options)
+    driver.set_window_size(1280, 720)
+    driver.get(URL)
+    action = Action(driver)
 
-driver = webdriver.Firefox(options)
-driver.set_window_size(1280, 720)
-driver.get(URL)
-# try:
-#     cookies = pickle.load(open("cookies.pkl", "rb"))
-#     for cookie in cookies:
-#         driver.add_cookie(cookie)
-# except FileNotFoundError:
-#     pass
-# pickle.dump(driver.get_cookies(), open("cookies.pkl", "wb"))
+    while True:
+        if action.login():
+            break
 
-action = Action(driver)
+    while True:
+        action.abawuwu()
+        action.arena()
+        action.pets()
+        action.tavern()
+        sleep(200000)
 
-while True:
-    if action.login():
-        break
-
-while True:
-    action.arena()
-    action.pets()
-    action.abawuwu()
-    sleep(20)
+except:
+    driver.quit()
+    quit()

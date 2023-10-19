@@ -91,35 +91,44 @@ class Action:
         All actions required to completely log in to your account and tweak the settings so the script works.
         """
         self.do('login/title_screen', sleep_time=3, threshold=0.75)
-        self.do('login/cookies_accept2')
-        self.do('login/play_now', previous_image='login/cookies_accept', sleep_time=3)
-        self.do('login/before_first_login_button', (830, 680), previous_image='login/play_now', sleep_time=3, threshold=0.9)
-        self.do('login/login_credentials', click=False, sleep_time=2, previous_image='login/before_first_login_button')
-        self.do('login/account_name', sleep_time=0.5)
-        ActionChains(self.webdriver).send_keys(USERNAME).perform()
-        self.do('login/password', sleep_time=0.5)
-        ActionChains(self.webdriver).send_keys(PASSWORD).perform()
-        self.do('login/stay_logged_in_false')
-        self.do('login/stay_logged_in_true', previous_image='login/stay_logged_in_false')
-        self.do('login/login_ready')
-        self.do('login/character_selection', custom_coordinates=(900, 380))
+        if self.check_if_available('login/cookies_accept2', threshold=0.9):
+            self.do('login/cookies_accept2')
+            self.do('login/play_now', previous_image='login/cookies_accept', sleep_time=3)
+            self.do('login/before_first_login_button', (830, 680), previous_image='login/play_now', sleep_time=3,
+                    threshold=0.9)
+            self.do('login/login_credentials', click=False, sleep_time=2, previous_image='login/before_first_login_button')
+            self.do('login/account_name', sleep_time=0.5)
+            ActionChains(self.webdriver).send_keys(USERNAME).perform()
+            self.do('login/password', sleep_time=0.5)
+            ActionChains(self.webdriver).send_keys(PASSWORD).perform()
+            self.do('login/stay_logged_in_false')
+            self.do('login/stay_logged_in_true', previous_image='login/stay_logged_in_false')
+            self.do('login/login_ready')
+            self.do('login/character_selection', custom_coordinates=(900, 380))
+
+            # Enable timers and other options.
+            self.do('login/check_if_settings_screen', previous_image='login/settings', click=False)
+            self.do('login/show_timer_true', previous_image='login/show_timer_false', click=False)
+            self.do('login/tube_off_true', previous_image='login/tube_off_false', click=False)
+
+            print(f'{self.get_time()}: Settings changes were successful.')
+        else:
+            self.do('login/play_now', previous_image='login/cookies_accept', sleep_time=3)
+            self.do('login/character_selection', custom_coordinates=(900, 380))
         time.sleep(2.5)
-        print(f'{self.get_time()}: Login was successful.')
 
-        # Enable timers and other options.
-        self.do('login/check_if_settings_screen', previous_image='login/settings', click=False)
-        self.do('login/show_timer_true', previous_image='login/show_timer_false', click=False)
-        self.do('login/tube_off_true', previous_image='login/tube_off_false', click=False)
-
-        print(f'{self.get_time()}: Settings changes were successful.')
-        return True
+        if self.check_if_available('login/successful_login', threshold=0.93):
+            print(f'{self.get_time()}: Login was successful.')
+            return True
+        else:
+            return False
 
     def abawuwu(self):
         """
         Collect the daily bonus and do the free spin of the wheel of the day.
         """
         # open the Daily bonus tab and grab the daily bonus
-        self.do('abawuwu/daily_bonus_check', previous_image='abawuwu/abawuwu', click=False)
+        self.do('abawuwu/daily_bonus_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
         if self.check_if_available('abawuwu/claim_true', threshold=0.97):
             self.do('abawuwu/claim_true')
             print(f'{self.get_time()}: The daily bonus has been collected.')
@@ -127,7 +136,7 @@ class Action:
             print(f'{self.get_time()}: The daily bonus has already been collected today.')
 
         # open the Dr. Abawuwu tab and spin the wheel
-        self.do('abawuwu/abawuwu_check', previous_image='abawuwu/abawuwu', click=False)
+        self.do('abawuwu/abawuwu_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
         if self.check_if_available('abawuwu/dr_spin_true', threshold=0.95):
             self.do('abawuwu/dr_spin_true')
             print(f'{self.get_time()}: Dr. Abawuwu wheel has been spun.')
@@ -144,7 +153,7 @@ class Action:
         """
         opponents = [(575, 300), (790, 300), (1000, 300)]
         if self.check_if_available('arena/arena', threshold=0.93):
-            self.do('arena/arena', threshold=0.93)
+            self.do('arena/arena', threshold=0.93, sleep_time=3)
             self.do('arena/arena_boxes', previous_image='arena/arena', threshold=0.93, prev_threshold=0.93)
             self.click(choice(opponents))
             self.enter(3)
@@ -186,10 +195,10 @@ class Action:
         """
 
         if self.check_if_available('tavern/tavern', threshold=0.89):
-            self.do('tavern/tavern_keeper', previous_image='tavern/tavern', click=False)
+            self.do('tavern/tavern_keeper', previous_image='tavern/tavern', click=False, sleep_time=3)
             # Start the first quest
             self.enter(1)
-            if self.check_if_available('tavern/drink_beer'):
+            if self.check_if_available('tavern/drink_beer', threshold=0.91):
                 self.do('tavern/drink_beer')
                 if self.check_if_available('tavern/can_drink_true', threshold=0.95):
                     self.do('tavern/can_drink_true')
@@ -198,10 +207,11 @@ class Action:
                     return
                 else:
                     print(f'{self.get_time()}: No more adventure points in the tavern.')
-            else:
+            elif self.check_if_available('tavern/select_quest'):
                 self.enter(1)
                 print(f'{self.get_time()}: Mission started.')
-
+            else:
+                self.tavern()
         else:
             print(f'{self.get_time()}: You are currently on a mission.')
 
