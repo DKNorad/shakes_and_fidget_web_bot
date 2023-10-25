@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 class Detection:
-    def __init__(self, screenshot, image, threshold=0.85):
+    def __init__(self, screenshot, image, threshold: float = 0.85):
         self.cwd = Path.cwd()
         self.threshold = threshold
         self.main_screenshot_jpg = str(self.cwd.joinpath('images/main_screen.jpg'))
@@ -13,7 +13,7 @@ class Detection:
         self.image_to_search = cv.imread(image, cv.IMREAD_UNCHANGED)
         self.image_found = cv.matchTemplate(self.main_screen, self.image_to_search, cv.TM_CCORR_NORMED)
 
-    def check_if_available(self):
+    def check_if_available(self) -> bool:
         # check if image match is above the threshold
         max_val = cv.minMaxLoc(self.image_found)[1]
         print(self.debug_image)
@@ -23,7 +23,7 @@ class Detection:
             return True
         return False
 
-    def get_item_center(self):
+    def get_item_center(self) -> tuple[int, int]:
         # https://stackoverflow.com/questions/61687427/python-opencv-append-matches-center-x-y-coordinates-in-tuples
         # get image size and position
         image_h, image_w = self.image_to_search.shape[:2]

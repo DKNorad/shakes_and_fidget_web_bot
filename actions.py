@@ -18,18 +18,29 @@ class Action:
         self.main_screenshot_png = str(self.cwd.joinpath('images/main_screen.png'))
 
     @staticmethod
-    def get_time():
+    def get_time() -> str:
         # return current date and time
         return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
-    def enter(self, n):
-        # press ENTER key N number of times
+    def enter(self, n: int) -> None:
+        """
+        press the ENTER key N number of times
+        """
         for i in range(n):
             self.actionChain.send_keys(Keys.RETURN)
             self.actionChain.perform()
             time.sleep(0.8)
 
-    def click(self, coord):
+    def escape(self, n: int = 1) -> None:
+        """
+        press the ESC key N number of times
+        """
+        for i in range(n):
+            self.actionChain.send_keys(Keys.ESCAPE)
+            self.actionChain.perform()
+            time.sleep(0.8)
+
+    def click(self, coord: tuple[int, int]) -> None:
         """
         left mouse click with half a second sleep time.
         """
@@ -41,20 +52,21 @@ class Action:
         self.actionBuilder.perform()
         time.sleep(0.5)
 
-    def screenshot_and_match(self, image, threshold):
+    def screenshot_and_match(self, image: str, threshold: float) -> Detection:
         """ create screenshot and match(detect) image in entire window """
         time.sleep(0.5)
         self.webdriver.save_screenshot(self.main_screenshot_png)
         return Detection(self.main_screenshot_png, image, threshold)
 
-    def check_if_available(self, current_image, threshold=0.85):
+    def check_if_available(self, current_image: str, threshold: float = 0.85) -> bool:
         """ Check if we have a match. Sometimes we want to check without doing anything. """
         current_image = str(self.cwd.joinpath(f"images/{current_image}.jpg"))
         det = self.screenshot_and_match(current_image, threshold)
         return det.check_if_available()
 
-    def do(self, current_image, custom_coordinates=None, previous_image=None, click=True, sleep_time=1.5,
-           threshold=0.85, prev_threshold=0.85, retries=-1):
+    def do(self, current_image: str, custom_coordinates: tuple[int, int] = None, previous_image: str = None,
+           click: bool = True, sleep_time: float = 1.5, threshold: float = 0.85, prev_threshold: float = 0.85,
+           retries: int = -1) -> None:
         """
         The main function where we use image comparison to make sure we are on the correct screen and click if needed.
         :param current_image: The image we will be checking on the screenshot.
@@ -86,7 +98,7 @@ class Action:
                 else:
                     self.click(custom_coordinates)
 
-    def login(self):
+    def login(self) -> bool:
         """
         All actions required to completely log in to your account and tweak the settings so the script works.
         """
@@ -123,13 +135,13 @@ class Action:
         else:
             return False
 
-    def abawuwu(self):
+    def abawuwu(self) -> None:
         """
         Collect the daily bonus and do the free spin of the wheel of the day.
         """
         # open the Daily bonus tab and grab the daily bonus
         self.do('abawuwu/daily_bonus_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
-        if self.check_if_available('abawuwu/claim_true', threshold=0.97):
+        if self.check_if_available('abawuwu/claim_true', threshold=0.945):
             self.do('abawuwu/claim_true')
             print(f'{self.get_time()}: The daily bonus has been collected.')
         else:
@@ -137,13 +149,13 @@ class Action:
 
         # open the Dr. Abawuwu tab and spin the wheel
         self.do('abawuwu/abawuwu_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
-        if self.check_if_available('abawuwu/dr_spin_true', threshold=0.95):
+        if self.check_if_available('abawuwu/dr_spin_true', threshold=0.933):
             self.do('abawuwu/dr_spin_true')
             print(f'{self.get_time()}: Dr. Abawuwu wheel has been spun.')
         else:
             print(f'{self.get_time()}: The wheel has already been spun today.')
 
-    def arena(self):
+    def arena(self) -> None:
         """
         Taking care of the arena attacks.
         TODO: Try to gather details about the opponents and simulate battles before attacking.
@@ -161,33 +173,33 @@ class Action:
         else:
             print(f'{self.get_time()}: Arena is currently on cooldown.')
 
-    def pets(self):
+    def pets(self) -> None:
         """
         Check if pets are not under cooldown and attack all pets in order from "Shadow" to "Water".
         """
-        if not self.check_if_available('pets/pets_cooldown', threshold=0.91):
-            while True:
-                self.do('pets/pets', threshold=0.94)
-                if self.check_if_available('pets/check_if_pet_screen'):
-                    break
+        while True:
+            self.do('pets/pets', threshold=0.922)
+            if self.check_if_available('pets/check_if_pet_screen'):
+                break
 
-            if self.check_if_available('pets/pets_done', threshold=0.94):
-                print(f'{self.get_time()}: All pets have been attacked.')
-                return
+        if self.check_if_available('pets/pets_done', threshold=0.94):
+            print(f'{self.get_time()}: All pets have been attacked.')
+            return
 
-            pets = ['pet_shadow', 'pet_light', 'pet_earth', 'pet_fire', 'pet_water']
-            for pet in pets:
-                if self.check_if_available(f'pets/{pet}', threshold=0.9):
-                    self.do(f'pets/{pet}', threshold=0.9)
+        pets = ['pet_shadow', 'pet_light', 'pet_earth', 'pet_fire', 'pet_water']
+        for pet in pets:
+            if self.check_if_available(f'pets/{pet}', threshold=0.9):
+                self.do(f'pets/{pet}', threshold=0.9)
+                if self.check_if_available(f'pets/attack_ok', threshold=0.93):
                     self.enter(3)
                     print(f'{self.get_time()}: {pet.split("_")[1].upper()} pet has been attacked.')
-                    break
+                    return
                 else:
-                    continue
-        else:
-            print(f'{self.get_time()}: Pets are under cooldown at the moment.')
+                    print(f'{self.get_time()}: Pets are under cooldown at the moment.')
+            else:
+                continue
 
-    def tavern(self):
+    def tavern(self) -> None:
         """
         Go on a random quest in the tavern.
 
@@ -215,8 +227,8 @@ class Action:
         else:
             print(f'{self.get_time()}: You are currently on a mission.')
 
-    # TODO implement a way to choose a specific location in the Dungeon to be entered
     def dungeons(self):
+        # TODO implement a way to choose a specific location in the Dungeon to be entered
         # check if dungeons are available
         det = self.screenshot_and_match(r'dungeons\dungeons', 0.92)
         if not det.check_if_available():
@@ -237,7 +249,44 @@ class Action:
         self.click(x, y)
         self.enter(3)
 
+    def fortress(self) -> None:
+        """
+
+        """
+        self.do('fortress/attack', previous_image='fortress/fortress', click=False, sleep_time=3)
+
+        # Collect experience from the Academy.
+        self.click((450, 200))
+        if self.check_if_available('fortress/cancel_construction'):
+            self.escape()
+            print(f'{self.get_time()}: The Academy is under construction.')
+        else:
+            print(f'{self.get_time()}: Experience from the Academy has been collected.')
+
+        # Collect stone from the Quarry.
+        self.click((450, 520))
+        if self.check_if_available('fortress/cancel_construction'):
+            self.escape()
+            print(f'{self.get_time()}: The Quarry is under construction.')
+        elif self.check_if_available('fortress/close', threshold=0.95):
+            self.escape()
+            print(f'{self.get_time()}: The Stone storage is full.')
+        else:
+            print(f'{self.get_time()}: Stone from the Quarry has been collected.')
+
+        # Collect wood from the Woodcutter's Hut.
+        self.click((600, 600))
+        if self.check_if_available('fortress/cancel_construction'):
+            self.escape()
+            print(f'{self.get_time()}: The Woodcutter\'s Hut is under construction.')
+        elif self.check_if_available('fortress/close', threshold=0.95):
+            self.escape()
+            print(f'{self.get_time()}: The Wood storage is full.')
+        else:
+            print(f'{self.get_time()}: Wood from the Woodcutter\'s Hut has been collected.')
+
     def underground(self):
+        self.do('underground/tavern_keeper', previous_image='tavern/tavern', click=False, sleep_time=3)
         # create a screenshot until we have the correct tab opened
         det = self.screenshot_and_match(r'underground\lure_hero', 0.95)
         det2 = self.screenshot_and_match(r'underground\lure_hero_done', 0.95)
@@ -289,51 +338,3 @@ class Action:
                 break
             self.enter(3)
             print(f'{self.get_time()}: A hero has been lured in the underground.')
-
-    def fortress(self):
-        # create a screenshot until we have the correct tab opened
-        self.click(140, 450)
-        det = self.screenshot_and_match(r'fortress\attack', 0.94)
-        while not det.check_if_available():
-            self.click(140, 450)
-            det = self.screenshot_and_match(r'fortress\attack', 0.94)
-
-        # confirm that the Academy is not under construction and collect experience
-        self.click(450, 200)
-        det = self.screenshot_and_match(r'fortress\cancel_construction')
-        if det.check_if_available():
-            x, y = det.get_item_center()
-            self.click(x, y)
-            print(f'{self.get_time()}: The Academy is under construction.')
-        else:
-            print(f'{self.get_time()}: Experience from the Academy has been collected.')
-
-        # collect stone
-        self.click(450, 520)
-        det_cancel = self.screenshot_and_match(r'fortress\cancel_construction')
-        det_close = self.screenshot_and_match(r'fortress\close', 0.95)
-        if det_cancel.check_if_available():  # confirm that the Quarry is not under construction
-            x, y = det_cancel.get_item_center()
-            self.click(x, y)
-            print(f'{self.get_time()}: The Quarry is under construction.')
-        elif det_close.check_if_available():  # confirm that the stone storage is not full
-            x, y = det_close.get_item_center()
-            self.click(x, y)
-            print(f'{self.get_time()}: The Stone storage is full.')
-        else:
-            print(f'{self.get_time()}: Stone from the Quarry has been collected.')
-
-        # collect wood
-        self.click(600, 600)
-        det_cancel = self.screenshot_and_match(r'fortress\cancel_construction')
-        det_close = self.screenshot_and_match(r'fortress\close', 0.95)
-        if det_cancel.check_if_available():  # confirm that the Woodcutter's Hut is not under construction
-            x, y = det_cancel.get_item_center()
-            self.click(x, y)
-            print(f'{self.get_time()}: The Woodcutter\'s Hut is under construction.')
-        elif det_close.check_if_available():  # confirm that the wood storage is not full
-            x, y = det_close.get_item_center()
-            self.click(x, y)
-            print(f'{self.get_time()}: The Wood storage is full.')
-        else:
-            print(f'{self.get_time()}: Wood from the Woodcutter\'s Hut has been collected.')
