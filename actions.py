@@ -23,21 +23,12 @@ class Action:
         # return current date and time
         return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
-    def enter(self, n: int) -> None:
+    def press_key(self, key, n: int = 1) -> None:
         """
-        press the ENTER key N number of times
-        """
-        for i in range(n):
-            self.actionChain.send_keys(Keys.RETURN)
-            self.actionChain.perform()
-            time.sleep(0.8)
-
-    def escape(self, n: int = 1) -> None:
-        """
-        press the ESC key N number of times
+        press the given key N number of times
         """
         for i in range(n):
-            self.actionChain.send_keys(Keys.ESCAPE)
+            self.actionChain.send_keys(key)
             self.actionChain.perform()
             time.sleep(0.8)
 
@@ -172,7 +163,7 @@ class Action:
             self.do('arena/arena', threshold=0.93, sleep_time=3)
             self.do('arena/arena_boxes', previous_image='arena/arena', threshold=0.93, prev_threshold=0.93)
             self.click(choice(opponents))
-            self.enter(3)
+            self.enter(Keys.RETURN, 3)
             print(f'{self.get_time()}: A player has been attacked in the Arena.')
         else:
             print(f'{self.get_time()}: Arena is currently on cooldown.')
@@ -195,12 +186,12 @@ class Action:
             if self.check_if_available(f'pets/{pet}', threshold=0.9):
                 self.do(f'pets/{pet}', threshold=0.93)
                 if self.check_if_available(f'pets/attack_ok', threshold=0.93):
-                    self.enter(3)
+                    self.press_key(Keys.RETURN, 3)
                     print(f'{self.get_time()}: {pet.split("_")[1].upper()} pet has been attacked.')
                     return
                 else:
                     print(f'{self.get_time()}: Pets are under cooldown at the moment.')
-                    self.escape()
+                    self.press_key(Keys.ESCAPE)
                     return
             else:
                 continue
@@ -215,7 +206,7 @@ class Action:
         if self.check_if_available('tavern/tavern', threshold=0.89):
             self.do('tavern/tavern_keeper', previous_image='tavern/tavern', click=False, sleep_time=3)
             # Start the first quest
-            self.enter(1)
+            self.press_key(Keys.RETURN)
             if self.check_if_available('tavern/drink_beer', threshold=0.91):
                 self.do('tavern/drink_beer')
                 if self.check_if_available('tavern/can_drink_true', threshold=0.95):
@@ -226,7 +217,7 @@ class Action:
                 else:
                     print(f'{self.get_time()}: No more adventure points in the tavern.')
             elif self.check_if_available('tavern/select_quest'):
-                self.enter(1)
+                self.press_key(Keys.RETURN)
                 if self.check_if_available('tavern/inventory_full', threshold=0.95):
                     print(f'{self.get_time()}: Cannot start mission, inventory is full.')
                 else:
@@ -256,7 +247,7 @@ class Action:
         # enter "The Twister"
         x, y = det.get_item_center()
         self.click(x, y)
-        self.enter(3)
+        self.enter(Keys.RETURN, 3)
 
     def fortress(self) -> None:
         """
@@ -267,7 +258,7 @@ class Action:
         # Collect experience from the Academy.
         self.click((450, 200))
         if self.check_if_available('fortress/cancel_construction'):
-            self.escape()
+            self.press_key(Keys.ESCAPE)
             print(f'{self.get_time()}: The Academy is under construction.')
         else:
             print(f'{self.get_time()}: Experience from the Academy has been collected.')
@@ -275,12 +266,12 @@ class Action:
         # Collect stone from the Quarry.
         self.click((450, 520))
         if self.check_if_available('fortress/cancel_construction'):
-            self.escape()
+            self.press_key(Keys.ESCAPE)
             print(f'{self.get_time()}: The Quarry is under construction.')
         elif (self.check_if_available('fortress/close', threshold=0.95) or
               self.check_if_available('fortress/can_upgrade_false', threshold=0.95) or
               self.check_if_available('fortress/can_upgrade_true', threshold=0.95)):
-            self.escape()
+            self.press_key(Keys.ESCAPE)
             print(f'{self.get_time()}: The Stone storage is full.')
         else:
             print(f'{self.get_time()}: Stone from the Quarry has been collected.')
@@ -288,10 +279,10 @@ class Action:
         # Collect wood from the Woodcutter's Hut.
         self.click((600, 600))
         if self.check_if_available('fortress/cancel_construction'):
-            self.escape()
+            self.press_key(Keys.ESCAPE)
             print(f'{self.get_time()}: The Woodcutter\'s Hut is under construction.')
         elif self.check_if_available('fortress/close', threshold=0.95):
-            self.escape()
+            self.press_key(Keys.ESCAPE)
             print(f'{self.get_time()}: The Wood storage is full.')
         else:
             print(f'{self.get_time()}: Wood from the Woodcutter\'s Hut has been collected.')
@@ -347,5 +338,5 @@ class Action:
             if not det_attack.check_if_available():
                 print(f'{self.get_time()}: Maximum heroes lured for the day.')
                 break
-            self.enter(3)
+            self.enter(Keys.RETURN, 3)
             print(f'{self.get_time()}: A hero has been lured in the underground.')
