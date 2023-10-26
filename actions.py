@@ -7,6 +7,7 @@ from conf import USERNAME, PASSWORD
 from datetime import datetime
 from random import choice
 import time
+from typing import Tuple
 
 
 class Action:
@@ -40,7 +41,7 @@ class Action:
             self.actionChain.perform()
             time.sleep(0.8)
 
-    def click(self, coord: tuple[int, int]) -> None:
+    def click(self, coord: Tuple[int, int]) -> None:
         """
         left mouse click with half a second sleep time.
         """
@@ -64,7 +65,7 @@ class Action:
         det = self.screenshot_and_match(current_image, threshold)
         return det.check_if_available()
 
-    def do(self, current_image: str, custom_coordinates: tuple[int, int] = None, previous_image: str = None,
+    def do(self, current_image: str, custom_coordinates: Tuple[int, int] = None, previous_image: str = None,
            click: bool = True, sleep_time: float = 1.5, threshold: float = 0.85, prev_threshold: float = 0.85,
            retries: int = -1) -> None:
         """
@@ -200,6 +201,7 @@ class Action:
                 else:
                     print(f'{self.get_time()}: Pets are under cooldown at the moment.')
                     self.escape()
+                    return
             else:
                 continue
 
