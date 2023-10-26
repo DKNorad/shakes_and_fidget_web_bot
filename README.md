@@ -12,6 +12,10 @@ A bot that automatically performs most of the repeatable tasks in the game.
   - Academy - Collect the experience.
   - Quarry - Collect the stone.
   - Woodcutter's Hut - Collect the wood.
+- **Underground:**
+  - Soul Extractor - Collect the souls.
+  - Gold Pit - Collect the gold.
+  - Lure all 5 heroes for the day.
 - **Dr. Abawuwu:**
   - Collect the daily bonus.
   - Spin the wheel. 
@@ -19,7 +23,3 @@ A bot that automatically performs most of the repeatable tasks in the game.
 
 #### TODO:
 - **Dungeons:** Enter "The Twister" dungeon.
-- **Underground:**
-  - Soul Extractor - Collect the souls.
-  - Gold Pit - Collect the gold.
-  - Lure all 5 heroes for the day.
