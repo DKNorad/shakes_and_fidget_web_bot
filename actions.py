@@ -193,7 +193,7 @@ class Action:
         pets = ['pet_shadow', 'pet_light', 'pet_earth', 'pet_fire', 'pet_water']
         for pet in pets:
             if self.check_if_available(f'pets/{pet}', threshold=0.9):
-                self.do(f'pets/{pet}', threshold=0.9)
+                self.do(f'pets/{pet}', threshold=0.93)
                 if self.check_if_available(f'pets/attack_ok', threshold=0.93):
                     self.enter(3)
                     print(f'{self.get_time()}: {pet.split("_")[1].upper()} pet has been attacked.')
@@ -277,7 +277,9 @@ class Action:
         if self.check_if_available('fortress/cancel_construction'):
             self.escape()
             print(f'{self.get_time()}: The Quarry is under construction.')
-        elif self.check_if_available('fortress/close', threshold=0.95):
+        elif (self.check_if_available('fortress/close', threshold=0.95) or
+              self.check_if_available('fortress/can_upgrade_false', threshold=0.95) or
+              self.check_if_available('fortress/can_upgrade_true', threshold=0.95)):
             self.escape()
             print(f'{self.get_time()}: The Stone storage is full.')
         else:
