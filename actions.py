@@ -20,7 +20,9 @@ class Action:
 
     @staticmethod
     def get_time() -> str:
-        # return current date and time
+        """
+        :return: Current date and time. Ex: 27-10-2023 00:21:24
+        """
         return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
     def press_key(self, key, n: int = 1) -> None:
@@ -42,7 +44,7 @@ class Action:
         action.perform()
         self.actionBuilder.pointer_action.move_to_location(1, 1)
         self.actionBuilder.perform()
-        time.sleep(0.5)
+        time.sleep(1)
 
     def screenshot_and_match(self, image: str, threshold: float) -> Detection:
         """ create screenshot and match(detect) image in entire window """
@@ -163,7 +165,7 @@ class Action:
             self.do('arena/arena', threshold=0.93, sleep_time=3)
             self.do('arena/arena_boxes', previous_image='arena/arena', threshold=0.93, prev_threshold=0.93)
             self.click(choice(opponents))
-            self.enter(Keys.RETURN, 3)
+            self.press_key(Keys.RETURN, 3)
             print(f'{self.get_time()}: A player has been attacked in the Arena.')
         else:
             print(f'{self.get_time()}: Arena is currently on cooldown.')
@@ -287,56 +289,40 @@ class Action:
         else:
             print(f'{self.get_time()}: Wood from the Woodcutter\'s Hut has been collected.')
 
-    def underground(self):
-        self.do('underground/tavern_keeper', previous_image='tavern/tavern', click=False, sleep_time=3)
-        # create a screenshot until we have the correct tab opened
-        det = self.screenshot_and_match(r'underground\lure_hero', 0.95)
-        det2 = self.screenshot_and_match(r'underground\lure_hero_done', 0.95)
-        while not (det2.check_if_available() or det.check_if_available()):
-            self.click(140, 450)
-            det = self.screenshot_and_match(r'underground\lure_hero', 0.95)
-            det2 = self.screenshot_and_match(r'underground\lure_hero_done', 0.95)
+    def underground(self) -> None:
+        """
+        Collect the resources in the Underground and lure all heroes for the day.
+        """
+        self.do('underground/soul_harvest', previous_image='fortress/fortress', click=False, sleep_time=3, threshold=0.92)
 
-        # collect souls
-        self.click(1080, 280)
-
-        det_cancel = self.screenshot_and_match(r'underground\cancel_construction')
-        det_close = self.screenshot_and_match(r'underground\close')
-        if det_cancel.check_if_available():  # confirm that the Soul Extractor is not under construction
-            x, y = det_cancel.get_item_center()
-            self.click(x, y)
+        # Collect souls.
+        self.click((1080, 280))
+        if self.check_if_available('underground/cancel_construction', threshold=0.92):
+            self.press_key(Keys.ESCAPE)
             print(f'{self.get_time()}: The Soul Extractor is under construction.')
-        elif det_close.check_if_available():  # confirm that the storage is not full
-            x, y = det_close.get_item_center()
-            self.click(x, y)
+        elif self.check_if_available('underground/close', threshold=0.95):
+            self.press_key(Keys.ESCAPE)
             print(f'{self.get_time()}: The Soul storage is full.')
         else:
-            print(f'{self.get_time()}: Underground souls collected.')
+            print(f'{self.get_time()}: Underground souls have been collected.')
 
-        # collect gold
-        self.click(350, 380)
-
-        det_cancel = self.screenshot_and_match(r'underground\cancel_construction')
-        det_close = self.screenshot_and_match(r'underground\close')
-        if det_cancel.check_if_available():  # confirm that the Gold Pit is not under construction
-            x, y = det_cancel.get_item_center()
-            self.click(x, y)
-            print(f'{self.get_time()}: The Gold Pit is under construction.')
-        elif det_close.check_if_available():  # confirm that the gold hasn't been collected already
-            x, y = det_close.get_item_center()
-            self.click(x, y)
+        # Collect gold.
+        self.click((350, 380))
+        if (self.check_if_available('underground/close', threshold=0.95) or
+                self.check_if_available('underground/cancel_construction', threshold=0.95)):
+            self.press_key(Keys.ESCAPE)
             print(f'{self.get_time()}: The gold has already been collected.')
         else:
-            print(f'{self.get_time()}: Underground gold collected.')
+            print(f'{self.get_time()}: Underground gold has been collected.')
 
-        # lure heroes underground
-        det_lure = self.screenshot_and_match(r'underground\lure_hero', 0.95)
-        x, y = det_lure.get_item_center()
-        self.click(x, y)
-        det_attack = self.screenshot_and_match(r'underground\attack_hero', 0.95)
-        while True:
-            if not det_attack.check_if_available():
-                print(f'{self.get_time()}: Maximum heroes lured for the day.')
-                break
-            self.enter(Keys.RETURN, 3)
-            print(f'{self.get_time()}: A hero has been lured in the underground.')
+        # Lure heroes underground.
+        if self.check_if_available('underground/lure_hero', threshold=0.95):
+            self.do('underground/lure_hero')
+            while True:
+                if self.check_if_available('underground/attack_hero', threshold=0.95):
+                    self.press_key(Keys.RETURN, 3)
+                    print(f'{self.get_time()}: A hero has been lured in the underground.')
+                else:
+                    break
+
+        print(f'{self.get_time()}: Maximum heroes lured for the day.')
