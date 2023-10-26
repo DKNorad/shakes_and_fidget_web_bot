@@ -151,7 +151,10 @@ class Action:
         self.do('abawuwu/abawuwu_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
         if self.check_if_available('abawuwu/dr_spin_true', threshold=0.933):
             self.do('abawuwu/dr_spin_true')
-            print(f'{self.get_time()}: Dr. Abawuwu wheel has been spun.')
+            if self.check_if_available('abawuwu/backpack_full', threshold=0.94):
+                print(f'{self.get_time()}: Cannot spin the Dr. Abawuwu wheel, backpack is full.')
+            else:
+                print(f'{self.get_time()}: Dr. Abawuwu wheel has been spun.')
         else:
             print(f'{self.get_time()}: The wheel has already been spun today.')
 
@@ -196,6 +199,7 @@ class Action:
                     return
                 else:
                     print(f'{self.get_time()}: Pets are under cooldown at the moment.')
+                    self.escape()
             else:
                 continue
 
@@ -221,7 +225,10 @@ class Action:
                     print(f'{self.get_time()}: No more adventure points in the tavern.')
             elif self.check_if_available('tavern/select_quest'):
                 self.enter(1)
-                print(f'{self.get_time()}: Mission started.')
+                if self.check_if_available('tavern/inventory_full', threshold=0.95):
+                    print(f'{self.get_time()}: Cannot start mission, inventory is full.')
+                else:
+                    print(f'{self.get_time()}: Mission started.')
             else:
                 self.tavern()
         else:
@@ -251,9 +258,9 @@ class Action:
 
     def fortress(self) -> None:
         """
-
+        Collect the resources generators in the Fortress.
         """
-        self.do('fortress/attack', previous_image='fortress/fortress', click=False, sleep_time=3)
+        self.do('fortress/attack', previous_image='fortress/fortress', click=False, sleep_time=3, threshold=0.92)
 
         # Collect experience from the Academy.
         self.click((450, 200))
