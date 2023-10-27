@@ -1,4 +1,5 @@
 from selenium.webdriver import ActionChains
+from selenium.webdriver import Firefox
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.keys import Keys
 from pathlib import Path
@@ -11,7 +12,7 @@ from typing import Tuple
 
 
 class Action:
-    def __init__(self, webdriver):
+    def __init__(self, webdriver: Firefox):
         self.webdriver = webdriver
         self.actionBuilder = ActionBuilder(webdriver)
         self.actionChain = ActionChains(webdriver)
@@ -229,28 +230,6 @@ class Action:
         else:
             print(f'{self.get_time()}: You are currently on a mission.')
 
-    def dungeons(self):
-        # TODO implement a way to choose a specific location in the Dungeon to be entered
-        # check if dungeons are available
-        det = self.screenshot_and_match(r'dungeons\dungeons', 0.92)
-        if not det.check_if_available():
-            return print(f'{self.get_time()}: The dungeons are currently on a cooldown.')
-
-        # get center coordinates and click
-        main_x, main_y = det.get_item_center()
-        self.click(main_x, main_y)
-
-        # create a new screenshot to see if we opened the correct tab
-        det = self.screenshot_and_match(r'dungeons\dungeons_twister')
-        while not det.check_if_available():
-            self.click(main_x, main_y)
-            det = self.screenshot_and_match(r'dungeons\dungeons_twister')
-
-        # enter "The Twister"
-        x, y = det.get_item_center()
-        self.click(x, y)
-        self.enter(Keys.RETURN, 3)
-
     def fortress(self) -> None:
         """
         Collect the resources generators in the Fortress.
@@ -326,3 +305,25 @@ class Action:
                     break
 
         print(f'{self.get_time()}: Maximum heroes lured for the day.')
+
+    def dungeons(self):
+        # TODO implement a way to choose a specific location in the Dungeon to be entered
+        # check if dungeons are available
+        det = self.screenshot_and_match(r'dungeons\dungeons', 0.92)
+        if not det.check_if_available():
+            return print(f'{self.get_time()}: The dungeons are currently on a cooldown.')
+
+        # get center coordinates and click
+        main_x, main_y = det.get_item_center()
+        self.click(main_x, main_y)
+
+        # create a new screenshot to see if we opened the correct tab
+        det = self.screenshot_and_match(r'dungeons\dungeons_twister')
+        while not det.check_if_available():
+            self.click(main_x, main_y)
+            det = self.screenshot_and_match(r'dungeons\dungeons_twister')
+
+        # enter "The Twister"
+        x, y = det.get_item_center()
+        self.click(x, y)
+        self.enter(Keys.RETURN, 3)
