@@ -15,13 +15,23 @@ class Detection:
 
     def check_if_available(self) -> bool:
         # check if image match is above the threshold
-        max_val = cv.minMaxLoc(self.image_found)[1]
+        min_val, max_val, min_loc, max_loc = cv.minMaxLoc(self.image_found)
+
+
         print(self.debug_image)
         print(max_val)
         print(self.threshold)
         if max_val >= self.threshold:
+            self.get_match_image(max_loc)
             return True
+
         return False
+
+    def get_match_image(self, top_left):
+        h, w, _ = self.image_to_search.shape
+        bottom_right = (top_left[0] + w, top_left[1] + h)
+        cv.rectangle(self.main_screen, top_left, bottom_right, 255, 2)
+        cv.imwrite('./res.png', self.main_screen)
 
     def get_item_center(self) -> tuple[int, int]:
         # https://stackoverflow.com/questions/61687427/python-opencv-append-matches-center-x-y-coordinates-in-tuples
