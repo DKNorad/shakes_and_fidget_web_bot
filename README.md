@@ -22,4 +22,5 @@ A bot that automatically performs most of the repeatable tasks in the game.
 
 
 #### TODO:
-- **Dungeons:** Enter "The Twister" dungeon.
+- **Dungeons:**
+  - Choose which dungeon to attack.
