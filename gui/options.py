@@ -1,58 +1,73 @@
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
+from tkinter import *
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from gui.main import MainApp
 
 
-class CredentialsEntry(ttk.Frame):
-    def __init__(self, master):
-        super().__init__(master, padding=(20, 10))
-        self.pack(fill=BOTH, expand=YES)
+class Options(ttk.Frame):
+    def __init__(self, master, controller: "MainApp"):
+        super().__init__(master, padding=(10, 5))
+        self.controller = controller
 
-        # form variables
-        self.username = ttk.StringVar(value="")
-        self.password = ttk.StringVar(value="")
-        self.url = ttk.StringVar(value="")
+        self.pack(fill=BOTH, expand=YES, anchor=NW, side=RIGHT)
 
-        # form header
-        hdr_txt = "Please enter your username, password and game URL."
-        hdr = ttk.Label(master=self, text=hdr_txt, width=50)
-        hdr.pack(fill=X, pady=10)
+        col = ttk.Frame(self, padding=10)
+        col.grid(row=0, column=0, sticky=NSEW)
 
-        # form entries
-        self.create_form_entry("username", self.username)
-        self.create_form_entry("password", self.password)
-        self.create_form_entry("url", self.url)
-        self.create_buttonbox()
+        self.underground_var = IntVar(col, 0)
 
-    def create_form_entry(self, label, variable):
-        """Create a single form entry"""
-        container = ttk.Frame(self)
-        container.pack(fill=X, expand=YES, pady=5)
+        options = ttk.Labelframe(col, text='Options', padding=(15, 10))
+        options.pack(side=TOP, fill=BOTH, expand=YES)
 
-        lbl = ttk.Label(master=container, text=label.title(), width=10)
-        lbl.pack(side=LEFT, padx=5)
+        # Tavern
+        tavern1 = ttk.Checkbutton(options, text='Tavern')
+        tavern1.pack(fill=X, pady=5)
 
-        ent = ttk.Entry(master=container, textvariable=variable)
-        ent.pack(side=LEFT, padx=5, fill=X, expand=YES)
+        cbo = ttk.Combobox(master=options, values=['Average', 'Gold', 'Experience'], state=READONLY)
+        cbo.current(0)
+        cbo.pack(fill=X, padx=(20, 0), pady=5)
 
-    def create_buttonbox(self):
-        """Create the application buttonbox"""
-        container = ttk.Frame(self)
-        container.pack(fill=X, expand=YES, pady=(15, 10))
+        # Arena
+        arena1 = ttk.Checkbutton(options, text='Arena')
+        arena1.pack(fill=X, pady=5)
 
-        sub_btn = ttk.Button(master=container, text="Start", command=self.on_submit, width=6)
-        sub_btn.pack(side=RIGHT, padx=5)
-        sub_btn.focus_set()
+        cbo = ttk.Combobox(master=options, values=['Average', 'Gold', 'Experience'], state=READONLY)
+        cbo.current(0)
+        cbo.pack(fill=X, padx=(20, 0), pady=5)
 
-        cnl_btn = ttk.Button(master=container, text="Stop", command=self.on_cancel, width=6)
-        cnl_btn.pack(side=RIGHT, padx=5)
+        # Pets
+        pets1 = ttk.Checkbutton(options, text='Pets')
+        pets1.pack(fill=X, pady=5)
 
-    def on_submit(self):
-        """Print the contents to console and return the values."""
-        print("Name:", self.username.get())
-        print("Address:", self.password.get())
-        print("Phone:", self.url.get())
-        return self.username.get(), self.password.get(), self.url.get()
+        # Fortress
+        fortress1 = ttk.Checkbutton(options, text='Fortress')
+        fortress1.pack(fill=X, pady=5)
 
-    def on_cancel(self):
-        """Cancel and close the application."""
-        self.quit()
+        fortress2 = ttk.Checkbutton(master=options, text='Collect experience from the Academy')
+        fortress2.pack(fill=X, padx=(20, 0), pady=5)
+
+        fortress3 = ttk.Checkbutton(master=options, text='Collect stone from the Quarry')
+        fortress3.pack(fill=X, padx=(20, 0), pady=5)
+
+        fortress4 = ttk.Checkbutton(master=options, text='Collect wood from the Woodcutter\'s Hut')
+        fortress4.pack(fill=X, padx=(20, 0), pady=5)
+
+        # Underground
+        underground1 = ttk.Checkbutton(options, text='Underground', variable=self.underground_var)
+        underground1.pack(fill=X, pady=5)
+
+        underground2 = ttk.Checkbutton(master=options, text='Collect souls from the Soul Extractor')
+        underground2.pack(fill=X, padx=(20, 0), pady=5)
+
+        underground3 = ttk.Checkbutton(master=options, text='Collect gold from the Gold Pit')
+        underground3.pack(fill=X, padx=(20, 0), pady=5)
+
+        underground4 = ttk.Checkbutton(master=options, text='Lure heroes underground')
+        underground4.pack(fill=X, padx=(20, 0), pady=5)
+
+        # Dungeon
+        underground1 = ttk.Checkbutton(options, text='Dungeon', state=DISABLED)
+        underground1.pack(fill=X, pady=5)
