@@ -19,6 +19,8 @@ class CredentialsEntry(ttk.Frame):
         self.create_form_entry("url", self.controller.url)
         self.create_buttonbox()
 
+        self.create_browser_options()
+
     def create_form_entry(self, label, variable, show_chr=""):
         """Create a single form entry"""
         container = ttk.Frame(self)
@@ -35,10 +37,22 @@ class CredentialsEntry(ttk.Frame):
         container = ttk.Frame(self)
         container.pack(fill=X, expand=YES, pady=(15, 10))
 
-        sub_btn = ttk.Button(master=container, text="Start", command=self.controller.start_webdriver, bootstyle=SUCCESS, width=6)
+        sub_btn = ttk.Button(master=container, text="Start", command=self.controller.start_webdriver,
+                             bootstyle=SUCCESS, width=6)
         sub_btn.pack(side=RIGHT, padx=5)
         sub_btn.focus_set()
 
-        cnl_btn = ttk.Button(master=container, text="Stop", command=self.controller.stop_webdriver, bootstyle=DANGER, width=6)
+        cnl_btn = ttk.Button(master=container, text="Stop", command=self.controller.stop_webdriver,
+                             bootstyle=DANGER, width=6)
         cnl_btn.pack(side=RIGHT, padx=5)
 
+    def create_browser_options(self):
+        container = ttk.Frame(self)
+        container.pack(fill=X, expand=YES, pady=5)
+
+        browser_options = ttk.Labelframe(container, text='Browser options:', padding=(15, 10))
+        browser_options.pack(side=TOP, fill=BOTH, expand=YES)
+
+        headless = ttk.Checkbutton(browser_options, text='Show window',
+                                   variable=self.controller.browser_options.get("headless"))
+        headless.pack(fill=X, pady=5)
