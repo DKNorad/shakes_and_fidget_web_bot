@@ -9,13 +9,13 @@ if TYPE_CHECKING:
 
 class Options(ttk.Frame):
     def __init__(self, master, controller: "MainApp"):
-        super().__init__(master, padding=(10, 5))
+        super().__init__(master, padding=(5, 5))
         self.controller = controller
 
-        self.pack(fill=BOTH, expand=YES, anchor=NW, side=RIGHT)
+        self.pack(fill=BOTH, expand=YES, anchor=NW, side=LEFT)
 
-        col = ttk.Frame(self, padding=10)
-        col.grid(row=0, column=0, sticky=NSEW)
+        col = ttk.Frame(self, padding=5)
+        col.grid(row=0, column=2, sticky=NSEW)
 
         options = ttk.Labelframe(col, text='Options', padding=(15, 10))
         options.pack(side=TOP, fill=BOTH, expand=YES)
