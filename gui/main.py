@@ -13,8 +13,8 @@ class MainApp:
         self.app = ttk.Window("Shakes & Fidget Bot", "superhero", resizable=(False, False),
                               iconphoto=str(Path.cwd().joinpath('gui/assets/icon.png')))
 
-        self.username = ttk.StringVar(value=None)
-        self.password = ttk.StringVar(value=None)
+        self.username = ttk.StringVar(value="DKNorad")
+        self.password = ttk.StringVar(value="xzW7*JoV&U")
         self.url = ttk.StringVar(value="https://sfgame.net/")
         self.options = {
             "tavern": ttk.IntVar(),
@@ -62,9 +62,23 @@ class MainApp:
             self.print_output("The password field is empty.")
         else:
             self.driver.run()
+            self.perform_actions()
 
     def stop_webdriver(self):
         self.driver.stop()
 
     def perform_actions(self):
-        pass
+        action = self.driver.action
+        actions = {
+            "tavern": action.tavern,
+            "arena": action.arena,
+            "pets": action.pets,
+            "fortress": action.fortress,
+            "underground": action.underground,
+            "dungeon": action.dungeons,
+        }
+
+        action.login()
+        for option in self.options.items():
+            if option[1].get() == 1:
+                actions[option[0]]()
