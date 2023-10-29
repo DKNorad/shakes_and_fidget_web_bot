@@ -1,7 +1,6 @@
-from datetime import datetime
 from pathlib import Path
 from selenium.webdriver import Firefox, FirefoxOptions
-from actions import Action
+from actions.actions import Action
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -12,13 +11,13 @@ class WebDriver:
     def __init__(self, controller: "MainApp"):
         self.controller = controller
 
-        if not Path(Path.cwd().joinpath("ff_selenium_profile")).is_dir():
-            Path.cwd().joinpath("ff_selenium_profile").mkdir()
+        if not Path(Path.cwd().joinpath("../ff_selenium_profile")).is_dir():
+            Path.cwd().joinpath("../ff_selenium_profile").mkdir()
 
         self.options = FirefoxOptions()
         self.options.add_argument("--kiosk")
         self.options.add_argument('-profile')
-        self.options.add_argument(Path.cwd().joinpath("ff_selenium_profile").as_posix())
+        self.options.add_argument(Path.cwd().joinpath("../ff_selenium_profile").as_posix())
         self.driver = None
         self.action = None
 

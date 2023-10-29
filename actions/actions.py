@@ -3,21 +3,25 @@ from selenium.webdriver import Firefox
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.keys import Keys
 from pathlib import Path
-from detection import Detection
-from conf import USERNAME, PASSWORD
+from actions.detection import Detection
 from datetime import datetime
 from random import choice
 import time
 from typing import Tuple
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from gui.main import MainApp
 
 
 class Action:
-    def __init__(self, webdriver: Firefox):
+    def __init__(self, webdriver: "Firefox", controller: "MainApp"):
         self.webdriver = webdriver
         self.actionBuilder = ActionBuilder(webdriver)
         self.actionChain = ActionChains(webdriver)
         self.cwd = Path.cwd()
         self.main_screenshot_png = str(self.cwd.joinpath('images/main_screen.png'))
+        self.controller = controller
 
     @staticmethod
     def get_time() -> str:
@@ -105,9 +109,9 @@ class Action:
                     threshold=0.9)
             self.do('login/login_credentials', click=False, sleep_time=2, previous_image='login/before_first_login_button')
             self.do('login/account_name', sleep_time=0.5)
-            ActionChains(self.webdriver).send_keys(USERNAME).perform()
+            ActionChains(self.webdriver).send_keys(self.controller.username).perform()
             self.do('login/password', sleep_time=0.5)
-            ActionChains(self.webdriver).send_keys(PASSWORD).perform()
+            ActionChains(self.webdriver).send_keys(self.controller.password).perform()
             self.do('login/stay_logged_in_false')
             self.do('login/stay_logged_in_true', previous_image='login/stay_logged_in_false')
             self.do('login/login_ready')
@@ -118,14 +122,14 @@ class Action:
             self.do('login/show_timer_true', previous_image='login/show_timer_false', click=False)
             self.do('login/tube_off_true', previous_image='login/tube_off_false', click=False)
 
-            print(f'{self.get_time()}: Settings changes were successful.')
+            self.controller.print_output("Settings changes were successful.")
         else:
             self.do('login/play_now', previous_image='login/cookies_accept', sleep_time=3)
             self.do('login/character_selection', custom_coordinates=(900, 380))
         time.sleep(2.5)
 
         if self.check_if_available('login/successful_login', threshold=0.93):
-            print(f'{self.get_time()}: Login was successful.')
+            self.controller.print_output("Login was successful.")
             return True
         else:
             return False
@@ -138,20 +142,20 @@ class Action:
         self.do('abawuwu/daily_bonus_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
         if self.check_if_available('abawuwu/claim_true', threshold=0.945):
             self.do('abawuwu/claim_true')
-            print(f'{self.get_time()}: The daily bonus has been collected.')
+            self.controller.print_output("The daily bonus has been collected.")
         else:
-            print(f'{self.get_time()}: The daily bonus has already been collected today.')
+            self.controller.print_output("The daily bonus has already been collected today.")
 
         # open the Dr. Abawuwu tab and spin the wheel
         self.do('abawuwu/abawuwu_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
         if self.check_if_available('abawuwu/dr_spin_true', threshold=0.933):
             self.do('abawuwu/dr_spin_true')
             if self.check_if_available('abawuwu/backpack_full', threshold=0.94):
-                print(f'{self.get_time()}: Cannot spin the Dr. Abawuwu wheel, backpack is full.')
+                self.controller.print_output("Cannot spin the Dr. Abawuwu wheel, backpack is full.")
             else:
-                print(f'{self.get_time()}: Dr. Abawuwu wheel has been spun.')
+                self.controller.print_output("Dr. Abawuwu wheel has been spun.")
         else:
-            print(f'{self.get_time()}: The wheel has already been spun today.')
+            self.controller.print_output("The wheel has already been spun today.")
 
     def arena(self) -> None:
         """
@@ -167,9 +171,9 @@ class Action:
             self.do('arena/arena_boxes', previous_image='arena/arena', threshold=0.93, prev_threshold=0.93)
             self.click(choice(opponents))
             self.press_key(Keys.RETURN, 3)
-            print(f'{self.get_time()}: A player has been attacked in the Arena.')
+            self.controller.print_output("A player has been attacked in the Arena.")
         else:
-            print(f'{self.get_time()}: Arena is currently on cooldown.')
+            self.controller.print_output("Arena is currently on cooldown.")
 
     def pets(self) -> None:
         """
@@ -181,7 +185,7 @@ class Action:
                 break
 
         if self.check_if_available('pets/pets_done', threshold=0.94):
-            print(f'{self.get_time()}: All pets have been attacked.')
+            self.controller.print_output("All pets have been attacked.")
             return
 
         pets = ['pet_shadow', 'pet_light', 'pet_earth', 'pet_fire', 'pet_water']
@@ -190,10 +194,10 @@ class Action:
                 self.do(f'pets/{pet}', threshold=0.93)
                 if self.check_if_available(f'pets/attack_ok', threshold=0.93):
                     self.press_key(Keys.RETURN, 3)
-                    print(f'{self.get_time()}: {pet.split("_")[1].upper()} pet has been attacked.')
+                    self.print_output(f"{pet.split('_')[1].upper()} pet has been attacked.")
                     return
                 else:
-                    print(f'{self.get_time()}: Pets are under cooldown at the moment.')
+                    self.controller.print_output("Pets are under cooldown at the moment.")
                     self.press_key(Keys.ESCAPE)
                     return
             else:
@@ -214,21 +218,21 @@ class Action:
                 self.do('tavern/drink_beer')
                 if self.check_if_available('tavern/can_drink_true', threshold=0.95):
                     self.do('tavern/can_drink_true')
-                    print(f'{self.get_time()}: Adventure points exhausted. Drank the free beer.')
+                    self.controller.print_output("Adventure points exhausted. Drank the free beer.")
                     self.tavern()
                     return
                 else:
-                    print(f'{self.get_time()}: No more adventure points in the tavern.')
+                    self.controller.print_output("No more adventure points in the tavern.")
             elif self.check_if_available('tavern/select_quest'):
                 self.press_key(Keys.RETURN)
                 if self.check_if_available('tavern/inventory_full', threshold=0.95):
-                    print(f'{self.get_time()}: Cannot start mission, inventory is full.')
+                    self.controller.print_output("Cannot start mission, inventory is full.")
                 else:
-                    print(f'{self.get_time()}: Mission started.')
+                    self.controller.print_output("Mission started.")
             else:
                 self.tavern()
         else:
-            print(f'{self.get_time()}: You are currently on a mission.')
+            self.controller.print_output("You are currently on a mission.")
 
     def fortress(self) -> None:
         """

@@ -1,5 +1,4 @@
 import threading
-
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from typing import TYPE_CHECKING

@@ -5,7 +5,7 @@ import ttkbootstrap as ttk
 from gui.credentials_entry import CredentialsEntry
 from gui.options import Options
 from gui.output import Output
-from webdriver import WebDriver
+from webdriver.webdriver import WebDriver
 
 
 class MainApp:
