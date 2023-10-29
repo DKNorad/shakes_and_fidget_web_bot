@@ -13,8 +13,8 @@ class MainApp:
         self.app = ttk.Window("Shakes & Fidget Bot", "superhero", resizable=(False, False),
                               iconphoto=str(Path.cwd().joinpath('gui/assets/icon.png')))
 
-        self.username = ttk.StringVar(value="DKNorad")
-        self.password = ttk.StringVar(value="xzW7*JoV&U")
+        self.username = ttk.StringVar(value="")
+        self.password = ttk.StringVar(value="")
         self.url = ttk.StringVar(value="https://sfgame.net/")
         self.options = {
             "tavern": ttk.IntVar(),
