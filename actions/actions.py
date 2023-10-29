@@ -20,7 +20,7 @@ class Action:
         self.actionBuilder = ActionBuilder(webdriver)
         self.actionChain = ActionChains(webdriver)
         self.cwd = Path.cwd()
-        self.main_screenshot_png = str(self.cwd.joinpath('images/main_screen.png'))
+        self.main_screenshot_png = str(self.cwd.joinpath('actions/images/main_screen.png'))
         self.controller = controller
 
     @staticmethod
@@ -59,7 +59,7 @@ class Action:
 
     def check_if_available(self, current_image: str, threshold: float = 0.85) -> bool:
         """ Check if we have a match. Sometimes we want to check without doing anything. """
-        current_image = str(self.cwd.joinpath(f"images/{current_image}.jpg"))
+        current_image = str(self.cwd.joinpath(f"actions/images/{current_image}.jpg"))
         det = self.screenshot_and_match(current_image, threshold)
         return det.check_if_available()
 
@@ -77,14 +77,14 @@ class Action:
         :param prev_threshold: For previous image match.
         :param retries: Number of time it will try to perform the action until it considers that a logic error occurred.
         """
-        current_image = str(self.cwd.joinpath(f"images/{current_image}.jpg"))
+        current_image = str(self.cwd.joinpath(f"actions/images/{current_image}.jpg"))
         det = self.screenshot_and_match(current_image, threshold)
         while retries > 0 or retries < 0:
             if det.check_if_available():
                 break
             time.sleep(sleep_time)
             if previous_image is not None:
-                det = self.screenshot_and_match(str(self.cwd.joinpath(f"images/{previous_image}.jpg")), prev_threshold)
+                det = self.screenshot_and_match(str(self.cwd.joinpath(f"actions/images/{previous_image}.jpg")), prev_threshold)
                 if det.check_if_available():
                     self.click(det.get_item_center())
             det = self.screenshot_and_match(current_image, threshold)
@@ -102,16 +102,15 @@ class Action:
         All actions required to completely log in to your account and tweak the settings so the script works.
         """
         self.do('login/title_screen', sleep_time=3, threshold=0.75)
-        if self.check_if_available('login/cookies_accept2', threshold=0.9):
-            self.do('login/cookies_accept2')
-            self.do('login/play_now', previous_image='login/cookies_accept', sleep_time=3)
+        self.do('login/play_now', previous_image='login/cookies_accept2', sleep_time=3)
+        if not self.check_if_available('login/character_selection'):
             self.do('login/before_first_login_button', (830, 680), previous_image='login/play_now', sleep_time=3,
                     threshold=0.9)
             self.do('login/login_credentials', click=False, sleep_time=2, previous_image='login/before_first_login_button')
             self.do('login/account_name', sleep_time=0.5)
-            ActionChains(self.webdriver).send_keys(self.controller.username).perform()
+            ActionChains(self.webdriver).send_keys(self.controller.username.get()).perform()
             self.do('login/password', sleep_time=0.5)
-            ActionChains(self.webdriver).send_keys(self.controller.password).perform()
+            ActionChains(self.webdriver).send_keys(self.controller.password.get()).perform()
             self.do('login/stay_logged_in_false')
             self.do('login/stay_logged_in_true', previous_image='login/stay_logged_in_false')
             self.do('login/login_ready')
@@ -124,7 +123,6 @@ class Action:
 
             self.controller.print_output("Settings changes were successful.")
         else:
-            self.do('login/play_now', previous_image='login/cookies_accept', sleep_time=3)
             self.do('login/character_selection', custom_coordinates=(900, 380))
         time.sleep(2.5)
 
