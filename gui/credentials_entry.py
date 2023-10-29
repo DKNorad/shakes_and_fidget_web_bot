@@ -1,3 +1,5 @@
+import threading
+
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from typing import TYPE_CHECKING
@@ -8,49 +10,46 @@ if TYPE_CHECKING:
 
 class CredentialsEntry(ttk.Frame):
     def __init__(self, master, controller: "MainApp"):
-        super().__init__(master, padding=(10, 5))
+        super().__init__(master, padding=(5, 5))
         self.controller = controller
 
-        self.pack(fill='none', expand=YES, side=LEFT, anchor=NW)
+        self.pack(fill=BOTH, expand=YES, anchor=NW, side=LEFT)
 
-        # form entries
-        self.create_form_entry("username", self.controller.username)
-        self.create_form_entry("password", self.controller.password, show_chr="*")
-        self.create_form_entry("url", self.controller.url)
-        self.create_buttonbox()
+        col = ttk.Frame(self, padding=5)
+        col.grid(row=0, column=0, sticky=NSEW)
 
-        self.create_browser_options()
+        # Login frame
+        login = ttk.Labelframe(col, text='Login', padding=(15, 10))
+        login.pack(side=TOP, fill=BOTH, expand=YES)
 
-    def create_form_entry(self, label, variable, show_chr=""):
-        """Create a single form entry"""
-        container = ttk.Frame(self)
-        container.pack(fill=X, expand=YES, pady=5)
+        first_row = ttk.Frame(login)
+        first_row.pack(fill=X, expand=YES)
+        ttk.Label(first_row, text="Username:", width=10).pack(fill=X, padx=5, side=LEFT)
+        ttk.Entry(first_row, textvariable=self.controller.username).pack(fill=X, padx=5, pady=5, side=LEFT, expand=YES)
 
-        lbl = ttk.Label(master=container, text=label.title(), width=10)
-        lbl.pack(side=LEFT, padx=5)
+        second_row = ttk.Frame(login)
+        second_row.pack(fill=X, expand=YES)
+        ttk.Label(second_row, text="Password:", width=10).pack(fill=X, padx=5, side=LEFT)
+        ttk.Entry(second_row, textvariable=self.controller.password, show="*").pack(fill=X, padx=5, pady=5,
+                                                                                           side=LEFT, expand=YES)
 
-        ent = ttk.Entry(master=container, textvariable=variable, show=show_chr)
-        ent.pack(side=LEFT, padx=5, fill=X, expand=YES)
+        third_row = ttk.Frame(login)
+        third_row.pack(fill=X, expand=YES)
+        ttk.Label(third_row, text="Url", width=10).pack(fill=X, padx=5, side=LEFT)
+        ttk.Entry(third_row, textvariable=self.controller.url).pack(fill=X, padx=5, pady=5, side=LEFT, expand=YES)
 
-    def create_buttonbox(self):
-        """Create the application buttonbox"""
-        container = ttk.Frame(self)
-        container.pack(fill=X, expand=YES, pady=(15, 10))
+        fourth_row = ttk.Frame(login)
+        fourth_row.pack(fill=X, expand=YES, pady=(5, 0))
+        ttk.Button(fourth_row, text="Start",
+                   command=lambda: threading.Thread(target=self.controller.start_webdriver).start(),
+                   bootstyle=SUCCESS, width=6).pack(side=RIGHT, padx=5)
 
-        sub_btn = ttk.Button(master=container, text="Start", command=self.controller.start_webdriver,
-                             bootstyle=SUCCESS, width=6)
-        sub_btn.pack(side=RIGHT, padx=5)
-        sub_btn.focus_set()
+        ttk.Button(fourth_row, text="Stop",
+                   command=lambda: threading.Thread(target=self.controller.stop_webdriver).start(),
+                   bootstyle=DANGER, width=6).pack(side=RIGHT, padx=5)
 
-        cnl_btn = ttk.Button(master=container, text="Stop", command=self.controller.stop_webdriver,
-                             bootstyle=DANGER, width=6)
-        cnl_btn.pack(side=RIGHT, padx=5)
-
-    def create_browser_options(self):
-        container = ttk.Frame(self)
-        container.pack(fill=X, expand=YES, pady=5)
-
-        browser_options = ttk.Labelframe(container, text='Browser options:', padding=(15, 10))
+        # Browser options.
+        browser_options = ttk.Labelframe(col, text='Browser options', padding=(15, 10))
         browser_options.pack(side=TOP, fill=BOTH, expand=YES)
 
         headless = ttk.Checkbutton(browser_options, text='Show window',
