@@ -6,7 +6,7 @@ class Detection:
     def __init__(self, screenshot, image, threshold: float = 0.85):
         self.cwd = Path.cwd()
         self.threshold = threshold
-        self.main_screenshot_jpg = str(self.cwd.joinpath('images/main_screen.jpg'))
+        self.main_screenshot_jpg = str(self.cwd.joinpath('actions/images/main_screen.jpg'))
         self.debug_image = image
         cv.imwrite(self.main_screenshot_jpg, cv.imread(screenshot, cv.IMREAD_UNCHANGED), [int(cv.IMWRITE_JPEG_QUALITY), 100])
         self.main_screen = cv.imread(self.main_screenshot_jpg, cv.IMREAD_UNCHANGED)
