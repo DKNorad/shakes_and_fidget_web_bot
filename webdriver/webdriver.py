@@ -11,13 +11,14 @@ class WebDriver:
     def __init__(self, controller: "MainApp"):
         self.controller = controller
 
-        if not Path(Path.cwd().joinpath("../ff_selenium_profile")).is_dir():
-            Path.cwd().joinpath("../ff_selenium_profile").mkdir()
+        firefox_profile = Path.cwd().joinpath("webdriver/ff_selenium_profile")
+        if not Path(firefox_profile).is_dir():
+            firefox_profile.mkdir()
 
         self.options = FirefoxOptions()
         self.options.add_argument("--kiosk")
         self.options.add_argument('-profile')
-        self.options.add_argument(Path.cwd().joinpath("../ff_selenium_profile").as_posix())
+        self.options.add_argument(firefox_profile.as_posix())
         self.driver = None
         self.action = None
 
