@@ -22,10 +22,6 @@ class WebDriver:
         self.driver = None
         self.action = None
 
-    def print_output(self, text):
-        self.controller.output_box.insert('end', f'{datetime.now().strftime("%d-%m-%Y %H:%M:%S")}: {text}\n')
-        self.controller.output_box.see('end')
-
     def run(self):
         if not self.driver:
             if not self.controller.browser_options.get("headless").get():
@@ -36,15 +32,15 @@ class WebDriver:
 
             self.action = Action(self.driver, self.controller)
             self.driver.get(self.controller.url.get())
-            self.print_output("The browser has been started.")
+            self.controller.print_output("The browser has been started.")
         else:
-            self.print_output("The browser is already running.")
+            self.controller.print_output("The browser is already running.")
 
     def stop(self):
         if self.driver:
             self.driver.quit()
             self.driver = None
             self.action = None
-            self.print_output("The browser has been closed.")
+            self.controller.print_output("The browser has been closed.")
         else:
-            self.print_output("The browser is not running.")
+            self.controller.print_output("The browser is not running.")
