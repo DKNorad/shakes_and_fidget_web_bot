@@ -31,6 +31,9 @@ class MainApp:
             "underground_gold": ttk.IntVar(),
             "underground_lure": ttk.IntVar(),
             "dungeon": ttk.IntVar(),
+            "abawuwu": ttk.IntVar(),
+            "abawuwu_daily": ttk.IntVar(),
+            "abawuwu_spin": ttk.IntVar(),
         }
         self.browser_options = {
             "headless": ttk.IntVar()

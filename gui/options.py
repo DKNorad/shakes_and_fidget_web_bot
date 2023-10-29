@@ -88,3 +88,18 @@ class Options(ttk.Frame):
         dung1 = ttk.Checkbutton(options, text='Dungeon', state=DISABLED,
                                 variable=self.controller.options.get("dungeon"))
         dung1.pack(fill=X, pady=5)
+
+        # Abawuwu
+        aba1 = ttk.Checkbutton(options, text='Dr. Abawuwu', variable=self.controller.options.get("abawuwu"),
+                               command=lambda: [el.configure(state=NORMAL) for el in [aba2, aba3]]
+                               if self.controller.options.get("abawuwu").get()
+                               else [el.configure(state=DISABLED) for el in [aba2, aba3]])
+        aba1.pack(fill=X, pady=5)
+
+        aba2 = ttk.Checkbutton(master=options, text='Collect the daily bonus', state=DISABLED,
+                               variable=self.controller.options.get("abawuwu_daily"))
+        aba2.pack(fill=X, padx=(20, 0), pady=5)
+
+        aba3 = ttk.Checkbutton(master=options, text='Spin the wheel', state=DISABLED,
+                               variable=self.controller.options.get("abawuwu_spin"))
+        aba3.pack(fill=X, padx=(20, 0), pady=5)

@@ -4,7 +4,6 @@ from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.keys import Keys
 from pathlib import Path
 from actions.detection import Detection
-from datetime import datetime
 from random import choice
 import time
 from typing import Tuple
@@ -23,13 +22,6 @@ class Action:
         self.main_screenshot_png = str(self.cwd.joinpath('actions/images/main_screen.png'))
         self.controller = controller
 
-    @staticmethod
-    def get_time() -> str:
-        """
-        :return: Current date and time. Ex: 27-10-2023 00:21:24
-        """
-        return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-
     def press_key(self, key, n: int = 1) -> None:
         """
         press the given key N number of times
@@ -44,7 +36,7 @@ class Action:
         left mouse click with half a second sleep time.
         """
         action = ActionBuilder(self.webdriver)
-        print(f"x - {coord[0]}, y - {coord[1]}")
+        self.controller.print_output(f"x - {coord[0]}, y - {coord[1]}")
         action.pointer_action.move_to_location(coord[0], coord[1]).click()
         action.perform()
         self.actionBuilder.pointer_action.move_to_location(1, 1)
@@ -84,7 +76,8 @@ class Action:
                 break
             time.sleep(sleep_time)
             if previous_image is not None:
-                det = self.screenshot_and_match(str(self.cwd.joinpath(f"actions/images/{previous_image}.jpg")), prev_threshold)
+                det = self.screenshot_and_match(str(self.cwd.joinpath(f"actions/images/{previous_image}.jpg")),
+                                                prev_threshold)
                 if det.check_if_available():
                     self.click(det.get_item_center())
             det = self.screenshot_and_match(current_image, threshold)
@@ -106,7 +99,8 @@ class Action:
         if not self.check_if_available('login/character_selection'):
             self.do('login/before_first_login_button', (830, 680), previous_image='login/play_now', sleep_time=3,
                     threshold=0.9)
-            self.do('login/login_credentials', click=False, sleep_time=2, previous_image='login/before_first_login_button')
+            self.do('login/login_credentials', click=False, sleep_time=2,
+                    previous_image='login/before_first_login_button')
             self.do('login/account_name', sleep_time=0.5)
             ActionChains(self.webdriver).send_keys(self.controller.username.get()).perform()
             self.do('login/password', sleep_time=0.5)
@@ -136,24 +130,26 @@ class Action:
         """
         Collect the daily bonus and do the free spin of the wheel of the day.
         """
-        # open the Daily bonus tab and grab the daily bonus
-        self.do('abawuwu/daily_bonus_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
-        if self.check_if_available('abawuwu/claim_true', threshold=0.945):
-            self.do('abawuwu/claim_true')
-            self.controller.print_output("The daily bonus has been collected.")
-        else:
-            self.controller.print_output("The daily bonus has already been collected today.")
-
-        # open the Dr. Abawuwu tab and spin the wheel
-        self.do('abawuwu/abawuwu_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
-        if self.check_if_available('abawuwu/dr_spin_true', threshold=0.933):
-            self.do('abawuwu/dr_spin_true')
-            if self.check_if_available('abawuwu/backpack_full', threshold=0.94):
-                self.controller.print_output("Cannot spin the Dr. Abawuwu wheel, backpack is full.")
+        if self.controller.options['abawuwu_daily'] == 1:
+            # Grab the daily bonus
+            self.do('abawuwu/daily_bonus_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
+            if self.check_if_available('abawuwu/claim_true', threshold=0.945):
+                self.do('abawuwu/claim_true')
+                self.controller.print_output("The daily bonus has been collected.")
             else:
-                self.controller.print_output("Dr. Abawuwu wheel has been spun.")
-        else:
-            self.controller.print_output("The wheel has already been spun today.")
+                self.controller.print_output("The daily bonus has already been collected today.")
+
+        if self.controller.options['abawuwu_spin'] == 1:
+            # Spin the wheel
+            self.do('abawuwu/abawuwu_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
+            if self.check_if_available('abawuwu/dr_spin_true', threshold=0.933):
+                self.do('abawuwu/dr_spin_true')
+                if self.check_if_available('abawuwu/backpack_full', threshold=0.94):
+                    self.controller.print_output("Cannot spin the Dr. Abawuwu wheel, backpack is full.")
+                else:
+                    self.controller.print_output("Dr. Abawuwu wheel has been spun.")
+            else:
+                self.controller.print_output("The wheel has already been spun today.")
 
     def arena(self) -> None:
         """
@@ -192,7 +188,7 @@ class Action:
                 self.do(f'pets/{pet}', threshold=0.93)
                 if self.check_if_available(f'pets/attack_ok', threshold=0.93):
                     self.press_key(Keys.RETURN, 3)
-                    self.print_output(f"{pet.split('_')[1].upper()} pet has been attacked.")
+                    self.controller.print_output(f"{pet.split('_')[1].upper()} pet has been attacked.")
                     return
                 else:
                     self.controller.print_output("Pets are under cooldown at the moment.")
@@ -237,83 +233,90 @@ class Action:
         Collect the resources generators in the Fortress.
         """
         self.do('fortress/attack', previous_image='fortress/fortress', click=False, sleep_time=3, threshold=0.92)
+        
+        if self.controller.options['fortress_exp'] == 1:
+            # Collect experience from the Academy.
+            self.click((450, 200))
+            if self.check_if_available('fortress/cancel_construction'):
+                self.press_key(Keys.ESCAPE)
+                self.controller.print_output('The Academy is under construction.')
+            else:
+                self.controller.print_output('Experience from the Academy has been collected.')
 
-        # Collect experience from the Academy.
-        self.click((450, 200))
-        if self.check_if_available('fortress/cancel_construction'):
-            self.press_key(Keys.ESCAPE)
-            print(f'{self.get_time()}: The Academy is under construction.')
-        else:
-            print(f'{self.get_time()}: Experience from the Academy has been collected.')
+        if self.controller.options['fortress_stone'] == 1:
+            # Collect stone from the Quarry.
+            self.click((450, 520))
+            if self.check_if_available('fortress/cancel_construction'):
+                self.press_key(Keys.ESCAPE)
+                self.controller.print_output('The Quarry is under construction.')
+            elif (self.check_if_available('fortress/close', threshold=0.95) or
+                  self.check_if_available('fortress/can_upgrade_false', threshold=0.95) or
+                  self.check_if_available('fortress/can_upgrade_true', threshold=0.95)):
+                self.press_key(Keys.ESCAPE)
+                self.controller.print_output('The Stone storage is full.')
+            else:
+                self.controller.print_output('Stone from the Quarry has been collected.')
 
-        # Collect stone from the Quarry.
-        self.click((450, 520))
-        if self.check_if_available('fortress/cancel_construction'):
-            self.press_key(Keys.ESCAPE)
-            print(f'{self.get_time()}: The Quarry is under construction.')
-        elif (self.check_if_available('fortress/close', threshold=0.95) or
-              self.check_if_available('fortress/can_upgrade_false', threshold=0.95) or
-              self.check_if_available('fortress/can_upgrade_true', threshold=0.95)):
-            self.press_key(Keys.ESCAPE)
-            print(f'{self.get_time()}: The Stone storage is full.')
-        else:
-            print(f'{self.get_time()}: Stone from the Quarry has been collected.')
-
-        # Collect wood from the Woodcutter's Hut.
-        self.click((600, 600))
-        if self.check_if_available('fortress/cancel_construction'):
-            self.press_key(Keys.ESCAPE)
-            print(f'{self.get_time()}: The Woodcutter\'s Hut is under construction.')
-        elif self.check_if_available('fortress/close', threshold=0.95):
-            self.press_key(Keys.ESCAPE)
-            print(f'{self.get_time()}: The Wood storage is full.')
-        else:
-            print(f'{self.get_time()}: Wood from the Woodcutter\'s Hut has been collected.')
+        if self.controller.options['fortress_wood'] == 1:
+            # Collect wood from the Woodcutter's Hut.
+            self.click((600, 600))
+            if self.check_if_available('fortress/cancel_construction'):
+                self.press_key(Keys.ESCAPE)
+                self.controller.print_output('The Woodcutter\'s Hut is under construction.')
+            elif self.check_if_available('fortress/close', threshold=0.95):
+                self.press_key(Keys.ESCAPE)
+                self.controller.print_output('The Wood storage is full.')
+            else:
+                self.controller.print_output('Wood from the Woodcutter\'s Hut has been collected.')
 
     def underground(self) -> None:
         """
         Collect the resources in the Underground and lure all heroes for the day.
         """
-        self.do('underground/soul_harvest', previous_image='fortress/fortress', click=False, sleep_time=3, threshold=0.92)
+        self.do('underground/soul_harvest', previous_image='fortress/fortress', click=False, sleep_time=3,
+                threshold=0.92)
 
-        # Collect souls.
-        self.click((1080, 280))
-        if self.check_if_available('underground/cancel_construction', threshold=0.92):
-            self.press_key(Keys.ESCAPE)
-            print(f'{self.get_time()}: The Soul Extractor is under construction.')
-        elif self.check_if_available('underground/close', threshold=0.95):
-            self.press_key(Keys.ESCAPE)
-            print(f'{self.get_time()}: The Soul storage is full.')
-        else:
-            print(f'{self.get_time()}: Underground souls have been collected.')
+        if self.controller.options['underground_souls'] == 1:
+            # Collect souls.
+            self.click((1080, 280))
+            if self.check_if_available('underground/cancel_construction', threshold=0.92):
+                self.press_key(Keys.ESCAPE)
+                self.controller.print_output('The Soul Extractor is under construction.')
+            elif self.check_if_available('underground/close', threshold=0.95):
+                self.press_key(Keys.ESCAPE)
+                self.controller.print_output('The Soul storage is full.')
+            else:
+                self.controller.print_output('Underground souls have been collected.')
 
-        # Collect gold.
-        self.click((350, 380))
-        if (self.check_if_available('underground/close', threshold=0.95) or
-                self.check_if_available('underground/cancel_construction', threshold=0.95)):
-            self.press_key(Keys.ESCAPE)
-            print(f'{self.get_time()}: The gold has already been collected.')
-        else:
-            print(f'{self.get_time()}: Underground gold has been collected.')
+        if self.controller.options['underground_gold'] == 1:
+            # Collect gold.
+            self.click((350, 380))
+            if (self.check_if_available('underground/close', threshold=0.95) or
+                    self.check_if_available('underground/cancel_construction', threshold=0.95)):
+                self.press_key(Keys.ESCAPE)
+                self.controller.print_output('The gold has already been collected.')
+            else:
+                self.controller.print_output('Underground gold has been collected.')
 
-        # Lure heroes underground.
-        if self.check_if_available('underground/lure_hero', threshold=0.95):
-            self.do('underground/lure_hero')
-            while True:
-                if self.check_if_available('underground/attack_hero', threshold=0.95):
-                    self.press_key(Keys.RETURN, 3)
-                    print(f'{self.get_time()}: A hero has been lured in the underground.')
-                else:
-                    break
+        if self.controller.options['underground_lure'] == 1:
+            # Lure heroes underground.
+            if self.check_if_available('underground/lure_hero', threshold=0.95):
+                self.do('underground/lure_hero')
+                while True:
+                    if self.check_if_available('underground/attack_hero', threshold=0.95):
+                        self.press_key(Keys.RETURN, 3)
+                        self.controller.print_output('A hero has been lured in the underground.')
+                    else:
+                        break
 
-        print(f'{self.get_time()}: Maximum heroes lured for the day.')
+            self.controller.print_output('Maximum heroes lured for the day.')
 
     def dungeons(self):
         # TODO implement a way to choose a specific location in the Dungeon to be entered
         # check if dungeons are available
         det = self.screenshot_and_match(r'dungeons\dungeons', 0.92)
         if not det.check_if_available():
-            return print(f'{self.get_time()}: The dungeons are currently on a cooldown.')
+            return self.controller.print_output('The dungeons are currently on a cooldown.')
 
         # get center coordinates and click
         main_x, main_y = det.get_item_center()
