@@ -36,7 +36,6 @@ class Action:
         left mouse click with half a second sleep time.
         """
         action = ActionBuilder(self.webdriver)
-        self.controller.print_output(f"x - {coord[0]}, y - {coord[1]}")
         action.pointer_action.move_to_location(coord[0], coord[1]).click()
         action.perform()
         self.actionBuilder.pointer_action.move_to_location(1, 1)
