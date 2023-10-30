@@ -8,14 +8,12 @@ if TYPE_CHECKING:
 
 
 class CredentialsEntry(ttk.Frame):
-    def __init__(self, master, controller: "MainApp"):
+    def __init__(self, master, controller: "MainApp", sticky, row, column):
         super().__init__(master, padding=(5, 5))
         self.controller = controller
 
-        self.pack(fill=BOTH, expand=YES, anchor=NW, side=LEFT)
-
-        col = ttk.Frame(self, padding=5)
-        col.grid(row=0, column=0, sticky=NSEW)
+        col = ttk.Frame(master, padding=5)
+        col.grid(row=row, column=column, sticky=sticky)
 
         # Login frame
         login = ttk.Labelframe(col, text='Login', padding=(15, 10))
@@ -46,11 +44,3 @@ class CredentialsEntry(ttk.Frame):
         ttk.Button(fourth_row, text="Stop",
                    command=lambda: threading.Thread(target=self.controller.stop_webdriver).start(),
                    bootstyle=DANGER, width=6).pack(side=RIGHT, padx=5)
-
-        # Browser options.
-        browser_options = ttk.Labelframe(col, text='Browser options', padding=(15, 10))
-        browser_options.pack(side=TOP, fill=BOTH, expand=YES)
-
-        headless = ttk.Checkbutton(browser_options, text='Show window',
-                                   variable=self.controller.browser_options.get("headless"))
-        headless.pack(fill=X, pady=5)

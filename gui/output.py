@@ -8,14 +8,12 @@ if TYPE_CHECKING:
 
 
 class Output(ttk.Frame):
-    def __init__(self, master, controller: "MainApp"):
+    def __init__(self, master, controller: "MainApp", sticky, row, column):
         super().__init__(master, padding=(5, 5))
         self.controller = controller
 
-        self.pack(fill=BOTH, expand=YES, anchor=NW, side=RIGHT)
-
-        col = ttk.Frame(self, padding=5)
-        col.grid(row=0, column=3, sticky=NSEW)
+        col = ttk.Frame(master, padding=5)
+        col.grid(row=row, column=column, rowspan=3, sticky=sticky)
 
         output = ttk.Labelframe(col, text='Output', padding=(5, 0))
         output.pack(side=TOP, fill=BOTH, expand=YES)

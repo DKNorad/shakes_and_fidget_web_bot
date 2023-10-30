@@ -2,9 +2,12 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import Text
 import ttkbootstrap as ttk
+
+from gui.browser_options import BrowserOptions
 from gui.credentials_entry import CredentialsEntry
 from gui.options import Options
 from gui.output import Output
+from gui.statistics import Statistics
 from webdriver.webdriver import WebDriver
 
 
@@ -39,14 +42,24 @@ class MainApp:
             "headless": ttk.IntVar()
         }
 
+        self.statistics = {
+            "sessions": 11,
+            "tavern_gold": 125789,
+            "tavern_exp": 12587,
+            "arena_attacks": 77,
+            "arena_wins": 13
+        }
+
         self.driver = WebDriver(self)
 
         # Using the ScrolledText widget from ttkbootstrap but have Text as a type hint as the functions are missing.
         self.output_box: Text = None
 
-        CredentialsEntry(self.app, self)
-        Options(self.app, self)
-        Output(self.app, self)
+        CredentialsEntry(self.app, self, "NEWS", 0, 0)
+        BrowserOptions(self.app, self, "NEWS", 1, 0)
+        Statistics(self.app, self, "NEWS", 2, 0)
+        Options(self.app, self, "NW", 0, 1)
+        Output(self.app, self, "NW", 0, 2)
 
     def print_output(self, text):
         # Accessing the _text protected method to configure the Text widget state which is used for ScrolledText.
