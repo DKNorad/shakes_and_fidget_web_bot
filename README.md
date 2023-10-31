@@ -1,7 +1,9 @@
 # Shakes & Fidget Web Bot
 
 ### Description:
-A bot that automatically performs most of the repeatable tasks in the game.
+A bot that automatically performs most of the repeatable tasks in the game.  
+
+**Note:** This is a learning project. The program is against S&F General Terms and Conditions. Using it could lead to a ban in the game.
 
 ### Locations/Tasks:
 #### Done:
