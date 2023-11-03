@@ -16,9 +16,9 @@ class WebDriver:
             firefox_profile.mkdir()
 
         self.options = FirefoxOptions()
-        self.options.add_argument("--kiosk")
         self.options.add_argument('-profile')
         self.options.add_argument(firefox_profile.as_posix())
+
         self.driver = None
         self.action = None
 
@@ -28,10 +28,12 @@ class WebDriver:
                 self.options.add_argument('--headless')
 
             self.driver = Firefox(self.options)
-            self.driver.set_window_size(1280, 720)
+            self.driver.set_window_size(1280, 805)
 
             self.action = Action(self.driver, self.controller)
+
             self.driver.get(self.controller.url.get())
+
             self.controller.print_output("The browser has been started.")
         else:
             self.controller.print_output("The browser is already running.")
