@@ -28,3 +28,5 @@ A bot that automatically performs most of the repeatable tasks in the game.
 #### TODO:
 - **Dungeons:**
   - Choose which dungeon to attack.
+- Implement logic for the statistics.
+- Add a debug option on the GUI.
