@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import sleep
 from pathlib import Path
 from tkinter import Text
 import ttkbootstrap as ttk
@@ -8,7 +9,7 @@ from gui.credentials_entry import CredentialsEntry
 from gui.options import Options
 from gui.output import Output
 from gui.statistics import Statistics
-from webdriver.webdriver import WebDriver
+from firefox_driver.firefox_driver import WebDriver
 
 
 class MainApp:
@@ -19,25 +20,30 @@ class MainApp:
         self.username = ttk.StringVar(value="")
         self.password = ttk.StringVar(value="")
         self.url = ttk.StringVar(value="https://sfgame.net/")
-        self.options = {
+        self.action_options = {
             "tavern": ttk.IntVar(),
-            "tavern_type": ttk.StringVar(),
             "arena": ttk.IntVar(),
-            "arena_type": ttk.StringVar(),
             "pets": ttk.IntVar(),
             "fortress": ttk.IntVar(),
+            "underground": ttk.IntVar(),
+            "dungeon": ttk.IntVar(),
+            "abawuwu": ttk.IntVar(),
+
+        }
+
+        self.action_sub_options = {
+            "tavern_type": ttk.StringVar(),
+            "arena_type": ttk.StringVar(),
             "fortress_exp": ttk.IntVar(value=1),
             "fortress_stone": ttk.IntVar(value=1),
             "fortress_wood": ttk.IntVar(value=1),
-            "underground": ttk.IntVar(),
             "underground_souls": ttk.IntVar(value=1),
             "underground_gold": ttk.IntVar(value=1),
             "underground_lure": ttk.IntVar(value=1),
-            "dungeon": ttk.IntVar(),
-            "abawuwu": ttk.IntVar(),
             "abawuwu_daily": ttk.IntVar(value=1),
-            "abawuwu_spin": ttk.IntVar(value=1),
+            "abawuwu_spin": ttk.IntVar(value=1)
         }
+
         self.browser_options = {
             "headless": ttk.IntVar()
         }
@@ -69,7 +75,11 @@ class MainApp:
         self.output_box._text.configure(state='disabled')
 
     def run(self):
-        self.app.mainloop()
+        try:
+            self.app.mainloop()
+        except:
+            print("Driver killed.")
+            self.driver.driver.quit()
 
     def start_webdriver(self):
         if not self.username.get():
@@ -95,6 +105,10 @@ class MainApp:
         }
 
         action.login()
-        for option in self.options.items():
-            if option[1].get() == 1:
-                actions[option[0]]()
+        while self.driver:
+            for option in self.action_options.items():
+                if option[1].get() == 1:
+                    actions[option[0]]()
+                if self.driver.driver:
+                    self.stop_webdriver()
+            sleep(120)
