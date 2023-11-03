@@ -89,12 +89,17 @@ class Action:
                 else:
                     self.click(custom_coordinates)
 
-    def login(self) -> bool:
+    def login(self) -> None:
         """
         All actions required to completely log in to your account and tweak the settings so the script works.
         """
         self.do('login/title_screen', sleep_time=3, threshold=0.75)
-        self.do('login/play_now', previous_image='login/cookies_accept2', sleep_time=3)
+        self.do('login/play_now', previous_image='login/cookies_accept2', sleep_time=4)
+        while True:
+            if (self.check_if_available('login/character_selection') or
+                    self.check_if_available('login/before_first_login_button')):
+                break
+
         if not self.check_if_available('login/character_selection'):
             self.do('login/before_first_login_button', (830, 680), previous_image='login/play_now', sleep_time=3,
                     threshold=0.9)
@@ -107,6 +112,9 @@ class Action:
             self.do('login/stay_logged_in_false')
             self.do('login/stay_logged_in_true', previous_image='login/stay_logged_in_false')
             self.do('login/login_ready')
+            if self.check_if_available('login/wrong_credentials', threshold=0.96):
+                self.controller.print_output("Wrong credentials. Can't login.")
+                self.controller.stop_webdriver()
             self.do('login/character_selection', custom_coordinates=(900, 380))
 
             # Enable timers and other options.
@@ -121,15 +129,19 @@ class Action:
 
         if self.check_if_available('login/successful_login', threshold=0.93):
             self.controller.print_output("Login was successful.")
-            return True
+
+        self.do('abawuwu/daily_bonus_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
+        if self.check_if_available('abawuwu/claim_true', threshold=0.945):
+            self.do('abawuwu/claim_true')
+            self.controller.print_output("The daily bonus has been collected.")
         else:
-            return False
+            self.controller.print_output("The daily bonus has already been collected today.")
 
     def abawuwu(self) -> None:
         """
         Collect the daily bonus and do the free spin of the wheel of the day.
         """
-        if self.controller.options['abawuwu_daily'] == 1:
+        if self.controller.action_sub_options['abawuwu_daily'].get() == 1:
             # Grab the daily bonus
             self.do('abawuwu/daily_bonus_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
             if self.check_if_available('abawuwu/claim_true', threshold=0.945):
@@ -138,7 +150,7 @@ class Action:
             else:
                 self.controller.print_output("The daily bonus has already been collected today.")
 
-        if self.controller.options['abawuwu_spin'] == 1:
+        if self.controller.action_sub_options['abawuwu_spin'].get() == 1:
             # Spin the wheel
             self.do('abawuwu/abawuwu_check', previous_image='abawuwu/abawuwu', click=False, sleep_time=3)
             if self.check_if_available('abawuwu/dr_spin_true', threshold=0.933):
@@ -160,7 +172,7 @@ class Action:
         """
         opponents = [(575, 300), (790, 300), (1000, 300)]
         if self.check_if_available('arena/arena', threshold=0.93):
-            self.do('arena/arena', threshold=0.93, sleep_time=3)
+            self.do('arena/arena', threshold=0.90, sleep_time=3)
             self.do('arena/arena_boxes', previous_image='arena/arena', threshold=0.93, prev_threshold=0.93)
             self.click(choice(opponents))
             self.press_key(Keys.RETURN, 3)
@@ -233,7 +245,7 @@ class Action:
         """
         self.do('fortress/attack', previous_image='fortress/fortress', click=False, sleep_time=3, threshold=0.92)
         
-        if self.controller.options['fortress_exp'] == 1:
+        if self.controller.action_sub_options['fortress_exp'].get() == 1:
             # Collect experience from the Academy.
             self.click((450, 200))
             if self.check_if_available('fortress/cancel_construction'):
@@ -242,7 +254,7 @@ class Action:
             else:
                 self.controller.print_output('Experience from the Academy has been collected.')
 
-        if self.controller.options['fortress_stone'] == 1:
+        if self.controller.action_sub_options['fortress_stone'].get() == 1:
             # Collect stone from the Quarry.
             self.click((450, 520))
             if self.check_if_available('fortress/cancel_construction'):
@@ -256,7 +268,7 @@ class Action:
             else:
                 self.controller.print_output('Stone from the Quarry has been collected.')
 
-        if self.controller.options['fortress_wood'] == 1:
+        if self.controller.action_sub_options['fortress_wood'].get() == 1:
             # Collect wood from the Woodcutter's Hut.
             self.click((600, 600))
             if self.check_if_available('fortress/cancel_construction'):
@@ -274,8 +286,7 @@ class Action:
         """
         self.do('underground/soul_harvest', previous_image='fortress/fortress', click=False, sleep_time=3,
                 threshold=0.92)
-
-        if self.controller.options['underground_souls'] == 1:
+        if self.controller.action_sub_options['underground_souls'].get() == 1:
             # Collect souls.
             self.click((1080, 280))
             if self.check_if_available('underground/cancel_construction', threshold=0.92):
@@ -287,7 +298,7 @@ class Action:
             else:
                 self.controller.print_output('Underground souls have been collected.')
 
-        if self.controller.options['underground_gold'] == 1:
+        if self.controller.action_sub_options['underground_gold'].get() == 1:
             # Collect gold.
             self.click((350, 380))
             if (self.check_if_available('underground/close', threshold=0.95) or
@@ -297,7 +308,7 @@ class Action:
             else:
                 self.controller.print_output('Underground gold has been collected.')
 
-        if self.controller.options['underground_lure'] == 1:
+        if self.controller.action_sub_options['underground_lure'].get() == 1:
             # Lure heroes underground.
             if self.check_if_available('underground/lure_hero', threshold=0.95):
                 self.do('underground/lure_hero')
