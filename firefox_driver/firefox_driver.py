@@ -11,11 +11,12 @@ class WebDriver:
     def __init__(self, controller: "MainApp"):
         self.controller = controller
 
-        firefox_profile = Path.cwd().joinpath("webdriver/ff_selenium_profile")
+        firefox_profile = Path.cwd().joinpath("firefox_driver/ff_selenium_profile")
         if not Path(firefox_profile).is_dir():
             firefox_profile.mkdir()
 
         self.options = FirefoxOptions()
+        self.options.add_argument('--disable-blink-features=AutomationControlled')
         self.options.add_argument('-profile')
         self.options.add_argument(firefox_profile.as_posix())
 
